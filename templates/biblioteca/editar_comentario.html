@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Comentario{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit"></i> Editar Comentario
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Información del comentario original -->
+                    <div class="alert alert-light border mb-4">
+                        <h6 class="mb-2">
+                            <strong>En la reseña de:</strong> {{ comentario.reseña.usuario.username }}
+                        </h6>
+                        <p class="mb-2">
+                            <strong>Libro:</strong> {{ comentario.reseña.libro.titulo }}
+                        </p>
+                        <p class="mb-0 text-muted">
+                            <small>Publicado: {{ comentario.fecha|date:"d/m/Y H:i" }}</small>
+                        </p>
+                    </div>
+
+                    <!-- Formulario de edición -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            {{ form.contenido.label_tag }}
+                            {{ form.contenido }}
+                            {% if form.contenido.errors %}
+                                <div class="text-danger mt-1">
+                                    {{ form.contenido.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'detalle_libro' comentario.reseña.libro.id %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

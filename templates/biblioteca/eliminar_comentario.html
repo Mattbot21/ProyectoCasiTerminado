@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Eliminar Comentario{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-trash-alt"></i> Eliminar Comentario
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>¡Atención!</strong> Esta acción no se puede deshacer.
+                    </div>
+
+                    <!-- Información del comentario -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">
+                                Comentario en la reseña de {{ comentario.reseña.usuario.username }}
+                            </h6>
+                            <p class="card-text mb-2">
+                                <strong>Libro:</strong> {{ comentario.reseña.libro.titulo }}
+                            </p>
+                            <hr>
+                            <p class="card-text" style="font-style: italic;">
+                                "{{ comentario.contenido }}"
+                            </p>
+                            <small class="text-muted">
+                                Publicado: {{ comentario.fecha|date:"d/m/Y H:i" }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <p class="text-center mb-4">
+                        ¿Estás seguro de que deseas eliminar este comentario?
+                    </p>
+
+                    <!-- Formulario de confirmación -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'detalle_libro' comentario.reseña.libro.id %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Sí, Eliminar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

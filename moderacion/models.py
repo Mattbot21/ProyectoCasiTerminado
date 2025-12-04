@@ -31,6 +31,7 @@ class AccionModeracion(models.Model):
         ELIMINAR = 'eliminar', 'Eliminar contenido'
         OCULTAR = 'ocultar', 'Ocultar contenido'
         BANEAR = 'banear', 'Banear usuario'
+        IGNORAR = 'ignorar', 'Ignorar reporte'
 
     reporte = models.ForeignKey(Reporte, on_delete=models.CASCADE, related_name="acciones")
     administrador = models.ForeignKey(

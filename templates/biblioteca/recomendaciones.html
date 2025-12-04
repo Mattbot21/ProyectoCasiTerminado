@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Recomendaciones{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Recomendaciones personalizadas -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="bi bi-lightbulb-fill"></i> Recomendado para Ti
+            </h4>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">
+                <i class="bi bi-info-circle"></i> {{ razon }}
+            </p>
+
+            {% if libros_recomendados %}
+                <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+                    {% for libro in libros_recomendados %}
+                        <div class="col">
+                            <div class="card h-100 shadow-sm hover-shadow">
+                                <a href="{% url 'detalle_libro' libro.id %}" class="text-decoration-none">
+                                    {% if libro.portada %}
+                                        <img src="{{ libro.portada.url }}" 
+                                             class="card-img-top" 
+                                             alt="{{ libro.titulo }}"
+                                             style="height: 300px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                             style="height: 300px;">
+                                            <i class="bi bi-book fs-1"></i>
+                                        </div>
+                                    {% endif %}
+                                </a>
+                                <div class="card-body">
+                                    <h6 class="card-title text-truncate" title="{{ libro.titulo }}">
+                                        <a href="{% url 'detalle_libro' libro.id %}" class="text-decoration-none text-dark">
+                                            {{ libro.titulo }}
+                                        </a>
+                                    </h6>
+                                    <p class="card-text text-muted small text-truncate" title="{{ libro.autor }}">
+                                        <i class="bi bi-person"></i> {{ libro.autor }}
+                                    </p>
+                                    
+                                    {% if libro.promedio %}
+                                        <div class="mb-2">
+                                            {% for i in "12345" %}
+                                                {% if i|add:"0" <= libro.promedio %}
+                                                    <i class="bi bi-star-fill text-warning small"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star text-warning small"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <span class="small text-muted ms-1">
+                                                {{ libro.promedio|floatformat:1 }} ({{ libro.total }})
+                                            </span>
+                                        </div>
+                                    {% endif %}
+
+                                    <span class="badge bg-info text-dark">
+                                        {{ libro.get_genero_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i>
+                    No hay suficiente información para generar recomendaciones. 
+                    <a href="{% url 'lista_libros' %}" class="alert-link">Explora libros</a> 
+                    y crea reseñas para obtener recomendaciones personalizadas.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Libros recomendados por usuarios que sigues -->
+    {% if libros_seguidos %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-people-fill"></i> Recomendados por Usuarios que Sigues
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row row-cols-1 row-cols-md-3 row-cols-lg-6 g-3">
+                    {% for libro in libros_seguidos %}
+                        <div class="col">
+                            <div class="card h-100 shadow-sm hover-shadow">
+                                <a href="{% url 'detalle_libro' libro.id %}" class="text-decoration-none">
+                                    {% if libro.portada %}
+                                        <img src="{{ libro.portada.url }}" 
+                                             class="card-img-top" 
+                                             alt="{{ libro.titulo }}"
+                                             style="height: 200px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                             style="height: 200px;">
+                                            <i class="bi bi-book"></i>
+                                        </div>
+                                    {% endif %}
+                                </a>
+                                <div class="card-body p-2">
+                                    <h6 class="card-title small text-truncate mb-1" title="{{ libro.titulo }}">
+                                        {{ libro.titulo }}
+                                    </h6>
+                                    {% if libro.promedio %}
+                                        <div>
+                                            {% for i in "12345" %}
+                                                {% if i|add:"0" <= libro.promedio %}
+                                                    <i class="bi bi-star-fill text-warning" style="font-size: 0.7rem;"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star text-warning" style="font-size: 0.7rem;"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .hover-shadow {
+        transition: box-shadow 0.3s ease;
+    }
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+</style>
+{% endblock %}

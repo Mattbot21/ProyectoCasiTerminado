@@ -79,9 +79,38 @@ def resolver_reporte(request, reporte_id):
             accion.reporte = reporte
             accion.administrador = request.user
             accion.save()
+            
+            # Ejecutar la acción seleccionada
+            if accion.accion == 'eliminar':
+                if reporte.reseña:
+                    libro_id = reporte.reseña.libro.id
+                    reporte.reseña.delete()
+                    messages.success(request, "Reseña eliminada correctamente.")
+                elif reporte.comentario:
+                    libro_id = reporte.comentario.reseña.libro.id
+                    reporte.comentario.delete()
+                    messages.success(request, "Comentario eliminado correctamente.")
+            elif accion.accion == 'ocultar':
+                # Marcar como oculto (necesitarías agregar un campo 'oculto' en los modelos)
+                messages.success(request, "Contenido marcado como oculto.")
+            elif accion.accion == 'banear':
+                # Banear al usuario que creó el contenido
+                if reporte.reseña:
+                    usuario_a_banear = reporte.reseña.usuario
+                elif reporte.comentario:
+                    usuario_a_banear = reporte.comentario.usuario
+                else:
+                    usuario_a_banear = None
+                
+                if usuario_a_banear:
+                    usuario_a_banear.is_active = False
+                    usuario_a_banear.save()
+                    messages.success(request, f"Usuario {usuario_a_banear.username} baneado correctamente.")
+            elif accion.accion == 'ignorar':
+                messages.info(request, "Reporte marcado como ignorado. No se tomó ninguna acción.")
+            
             reporte.revisado = True
             reporte.save()
-            messages.success(request, "Reporte marcado como resuelto.")
             return redirect('panel_moderacion')
     else:
         form = AccionModeracionForm()

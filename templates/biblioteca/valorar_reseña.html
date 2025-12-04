@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Valorar Reseña{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-star"></i> Valorar Reseña
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Información de la reseña -->
+                    <div class="alert alert-info mb-4">
+                        <h6 class="mb-2">
+                            <strong>Libro:</strong> {{ reseña.libro.titulo }}
+                        </h6>
+                        <p class="mb-2">
+                            <strong>Reseña de:</strong> {{ reseña.usuario.username }}
+                        </p>
+                        <p class="mb-2 text-muted" style="font-style: italic;">
+                            "{{ reseña.comentario|truncatewords:50 }}"
+                        </p>
+                        <p class="mb-0">
+                            <strong>Calificación del libro:</strong> 
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= reseña.calificacion %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% else %}
+                                    <i class="far fa-star text-muted"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </p>
+                    </div>
+
+                    <!-- Estadísticas de valoración -->
+                    <div class="alert alert-light border mb-4">
+                        <div class="row text-center">
+                            <div class="col-md-6">
+                                <h5 class="mb-1">{{ reseña.promedio_valoracion|floatformat:1 }}</h5>
+                                <small class="text-muted">Promedio de valoración</small>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="mb-1">{{ reseña.total_valoraciones }}</h5>
+                                <small class="text-muted">Total de valoraciones</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if valoracion_actual %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        <strong>Tu valoración actual:</strong> {{ valoracion_actual.puntuacion }} estrellas
+                    </div>
+                    {% endif %}
+
+                    <!-- Formulario de valoración con estrellas -->
+                    <form method="post" id="valoracionForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4 text-center">
+                            <label class="form-label d-block mb-3">
+                                <strong>Selecciona tu valoración:</strong>
+                            </label>
+                            
+                            <div class="star-rating-container" id="starRating">
+                                <input type="radio" name="puntuacion" value="5" id="star5" {% if valoracion_actual and valoracion_actual.puntuacion == 5 %}checked{% endif %}>
+                                <label for="star5" class="star-label" data-value="5">
+                                    <i class="bi bi-star-fill"></i>
+                                </label>
+
+                                <input type="radio" name="puntuacion" value="4" id="star4" {% if valoracion_actual and valoracion_actual.puntuacion == 4 %}checked{% endif %}>
+                                <label for="star4" class="star-label" data-value="4">
+                                    <i class="bi bi-star-fill"></i>
+                                </label>
+
+                                <input type="radio" name="puntuacion" value="3" id="star3" {% if valoracion_actual and valoracion_actual.puntuacion == 3 %}checked{% endif %}>
+                                <label for="star3" class="star-label" data-value="3">
+                                    <i class="bi bi-star-fill"></i>
+                                </label>
+
+                                <input type="radio" name="puntuacion" value="2" id="star2" {% if valoracion_actual and valoracion_actual.puntuacion == 2 %}checked{% endif %}>
+                                <label for="star2" class="star-label" data-value="2">
+                                    <i class="bi bi-star-fill"></i>
+                                </label>
+
+                                <input type="radio" name="puntuacion" value="1" id="star1" {% if valoracion_actual and valoracion_actual.puntuacion == 1 %}checked{% endif %}>
+                                <label for="star1" class="star-label" data-value="1">
+                                    <i class="bi bi-star-fill"></i>
+                                </label>
+                            </div>
+
+                            <div id="ratingText" class="mt-3 text-muted">
+                                {% if valoracion_actual %}
+                                    Seleccionado: {{ valoracion_actual.puntuacion }} estrellas
+                                {% else %}
+                                    Selecciona una puntuación
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="text-center mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i>
+                                Valora según qué tan útil o interesante te pareció esta reseña
+                            </small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'detalle_libro' reseña.libro.id %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check"></i> 
+                                {% if valoracion_actual %}Actualizar{% else %}Valorar{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .star-rating-container {
+        display: inline-flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+        gap: 5px;
+        font-size: 3rem;
+    }
+
+    .star-rating-container input[type="radio"] {
+        display: none;
+    }
+
+    .star-label {
+        cursor: pointer;
+        color: #ddd;
+        transition: all 0.2s ease;
+    }
+
+    .star-label:hover {
+        color: #ffc107;
+        transform: scale(1.1);
+    }
+
+    .star-label:hover ~ .star-label {
+        color: #ffc107;
+    }
+
+    .star-rating-container input[type="radio"]:checked ~ .star-label {
+        color: #ffc107;
+    }
+
+    .star-rating-container input[type="radio"]:checked + .star-label {
+        color: #ffc107;
+    }
+
+    #ratingText {
+        font-size: 1.1rem;
+        font-weight: 500;
+        min-height: 30px;
+        transition: all 0.3s ease;
+    }
+    
+    .card {
+        border: none;
+    }
+    
+    .alert-info {
+        background-color: #e7f3ff;
+        border-color: #bee5eb;
+    }
+</style>
+
+<script>
+    // Interactividad de las estrellas
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.star-label');
+        const ratingText = document.getElementById('ratingText');
+        const radios = document.querySelectorAll('input[name="puntuacion"]');
+        
+        // Textos descriptivos
+        const descriptions = {
+            1: '1 estrella - No útil',
+            2: '2 estrellas - Poco útil',
+            3: '3 estrellas - Aceptable',
+            4: '4 estrellas - Útil',
+            5: '5 estrellas - Muy útil'
+        };
+
+        // Actualizar texto al seleccionar
+        radios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                ratingText.textContent = descriptions[this.value];
+                ratingText.style.color = '#ffc107';
+                ratingText.style.fontWeight = 'bold';
+            });
+        });
+
+        // Hover effect text
+        stars.forEach(star => {
+            star.addEventListener('mouseenter', function() {
+                const value = this.dataset.value;
+                ratingText.textContent = descriptions[value];
+                ratingText.style.color = '#6c757d';
+            });
+        });
+
+        // Restaurar texto original al salir
+        document.getElementById('starRating').addEventListener('mouseleave', function() {
+            const checked = document.querySelector('input[name="puntuacion"]:checked');
+            if (checked) {
+                ratingText.textContent = descriptions[checked.value];
+                ratingText.style.color = '#ffc107';
+                ratingText.style.fontWeight = 'bold';
+            } else {
+                ratingText.textContent = 'Selecciona una puntuación';
+                ratingText.style.color = '#6c757d';
+                ratingText.style.fontWeight = 'normal';
+            }
+        });
+    });
+</script>
+{% endblock %}

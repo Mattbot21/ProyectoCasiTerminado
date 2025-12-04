@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Feed Personalizado{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-people"></i> Tu Red
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'lista_siguiendo' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-person-check"></i> Siguiendo ({{ total_siguiendo }})
+                        </a>
+                        <a href="{% url 'lista_seguidores' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-heart"></i> Seguidores
+                        </a>
+                        <a href="{% url 'recomendaciones' %}" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-star"></i> Recomendaciones
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feed principal -->
+        <div class="col-md-9">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-rss-fill"></i> Actividad Reciente
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if reseñas %}
+                        {% for reseña in reseñas %}
+                            <div class="card mb-3 border-start border-primary border-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                <a href="{% url 'perfil_usuario_publico' reseña.usuario.id %}" class="text-decoration-none">
+                                                    <i class="bi bi-person-circle"></i> {{ reseña.usuario.username }}
+                                                </a>
+                                                <span class="text-muted">reseñó</span>
+                                            </h6>
+                                        </div>
+                                        <small class="text-muted">{{ reseña.fecha|timesince }} atrás</small>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-2">
+                                            {% if reseña.libro.portada %}
+                                                <img src="{{ reseña.libro.portada.url }}" 
+                                                     alt="{{ reseña.libro.titulo }}"
+                                                     class="img-fluid rounded shadow-sm">
+                                            {% else %}
+                                                <div class="bg-secondary text-white p-4 rounded text-center">
+                                                    <i class="bi bi-book fs-1"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-10">
+                                            <h5>
+                                                <a href="{% url 'detalle_libro' reseña.libro.id %}" class="text-decoration-none">
+                                                    {{ reseña.libro.titulo }}
+                                                </a>
+                                            </h5>
+                                            <p class="text-muted small mb-2">
+                                                <i class="bi bi-person"></i> {{ reseña.libro.autor }}
+                                            </p>
+
+                                            <!-- Calificación -->
+                                            <div class="mb-2">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= reseña.calificacion %}
+                                                        <i class="bi bi-star-fill text-warning"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-star text-warning"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                <span class="ms-1 text-muted">{{ reseña.calificacion }}/5</span>
+                                            </div>
+
+                                            <!-- Texto de la reseña -->
+                                            <p class="card-text">
+                                                {% if reseña.texto|length > 200 %}
+                                                    {{ reseña.texto|slice:":200" }}...
+                                                    <a href="{% url 'detalle_libro' reseña.libro.id %}" class="text-decoration-none">
+                                                        Leer más
+                                                    </a>
+                                                {% else %}
+                                                    {{ reseña.texto }}
+                                                {% endif %}
+                                            </p>
+
+                                            <div class="d-flex gap-3 text-muted small">
+                                                <span>
+                                                    <i class="bi bi-chat"></i> {{ reseña.comentarios.count }} comentarios
+                                                </span>
+                                                <span>
+                                                    <i class="bi bi-hand-thumbs-up"></i> {{ reseña.valoraciones.count }} valoraciones
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-info text-center">
+                            <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
+                            <h5>Tu feed está vacío</h5>
+                            <p>
+                                {% if total_siguiendo == 0 %}
+                                    Aún no sigues a ningún usuario. 
+                                    <a href="{% url 'lista_libros' %}" class="alert-link">Explora libros</a> 
+                                    para descubrir usuarios con gustos similares.
+                                {% else %}
+                                    Los usuarios que sigues aún no han publicado reseñas.
+                                {% endif %}
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

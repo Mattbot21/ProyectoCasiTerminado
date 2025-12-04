@@ -4,6 +4,49 @@
 {% block title %}Buscar Libros - Librería Digital{% endblock %}
 
 {% block content %}
+<style>
+    .filters-container {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .filters-container .form-label {
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .filters-container .form-select {
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+    
+    .filters-container .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+    
+    .active-filters .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+    
+    .book-rating {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .book-rating i {
+        font-size: 0.9rem;
+    }
+</style>
+
 <section class="search-section" style="padding-top: 120px; padding-bottom: 40px;">
     <div class="container">
         <div class="section-header" data-aos="fade-up">
@@ -12,7 +55,7 @@
         </div>
         
         <div class="search-container" data-aos="fade-up">
-            <form class="search-form" method="GET">
+            <form class="search-form" method="GET" id="searchForm">
                 <input type="text" name="q" class="form-control" placeholder="Buscar por título, autor o género..." value="{{ query }}">
                 <button type="submit" class="btn btn-search">
                     <i class="bi bi-search"></i>
@@ -20,6 +63,83 @@
                 </button>
             </form>
         </div>
+
+        <!-- Filtros y Ordenamiento (H12) -->
+        <div class="filters-container mt-4" data-aos="fade-up">
+            <form method="GET" id="filtersForm">
+                <input type="hidden" name="q" value="{{ query }}">
+                
+                <div class="row g-3">
+                    <!-- Filtro por Género -->
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            <i class="bi bi-filter"></i> Género
+                        </label>
+                        <select name="genero" class="form-select" onchange="this.form.submit()">
+                            <option value="">Todos los géneros</option>
+                            {% for gen in generos_disponibles %}
+                            <option value="{{ gen }}" {% if genero == gen %}selected{% endif %}>
+                                {{ gen|title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Filtro por Valoración -->
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            <i class="bi bi-star"></i> Valoración mínima
+                        </label>
+                        <select name="valoracion" class="form-select" onchange="this.form.submit()">
+                            <option value="">Todas</option>
+                            <option value="5" {% if valoracion_min == "5" %}selected{% endif %}>⭐⭐⭐⭐⭐ 5 estrellas</option>
+                            <option value="4" {% if valoracion_min == "4" %}selected{% endif %}>⭐⭐⭐⭐ 4+ estrellas</option>
+                            <option value="3" {% if valoracion_min == "3" %}selected{% endif %}>⭐⭐⭐ 3+ estrellas</option>
+                            <option value="2" {% if valoracion_min == "2" %}selected{% endif %}>⭐⭐ 2+ estrellas</option>
+                            <option value="1" {% if valoracion_min == "1" %}selected{% endif %}>⭐ 1+ estrellas</option>
+                        </select>
+                    </div>
+
+                    <!-- Ordenamiento -->
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <i class="bi bi-sort-down"></i> Ordenar por
+                        </label>
+                        <select name="orden" class="form-select" onchange="this.form.submit()">
+                            <option value="reciente" {% if orden == "reciente" %}selected{% endif %}>Más reciente</option>
+                            <option value="antiguo" {% if orden == "antiguo" %}selected{% endif %}>Más antiguo</option>
+                            <option value="valoracion" {% if orden == "valoracion" %}selected{% endif %}>Mejor valoración</option>
+                            <option value="titulo_az" {% if orden == "titulo_az" %}selected{% endif %}>Título (A-Z)</option>
+                            <option value="titulo_za" {% if orden == "titulo_za" %}selected{% endif %}>Título (Z-A)</option>
+                            <option value="autor" {% if orden == "autor" %}selected{% endif %}>Autor</option>
+                        </select>
+                    </div>
+
+                    <!-- Botón Limpiar Filtros -->
+                    <div class="col-md-2 d-flex align-items-end">
+                        <a href="{% url 'buscar_libros' %}" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-x-circle"></i> Limpiar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Indicadores de filtros activos -->
+        {% if genero or valoracion_min or query %}
+        <div class="active-filters mt-3" data-aos="fade-up">
+            <small class="text-muted">Filtros activos:</small>
+            {% if query %}
+            <span class="badge bg-primary ms-2">Búsqueda: "{{ query }}"</span>
+            {% endif %}
+            {% if genero %}
+            <span class="badge bg-info ms-2">Género: {{ genero|title }}</span>
+            {% endif %}
+            {% if valoracion_min %}
+            <span class="badge bg-warning text-dark ms-2">Valoración: {{ valoracion_min }}+ estrellas</span>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 </section>
 
@@ -27,7 +147,8 @@
     <div class="container">
         {% if query %}
         <p class="text-muted mb-4" data-aos="fade-up">
-            Resultados para: <strong class="text-accent">"{{ query }}"</strong>
+            Resultados para: <strong class="text-accent">"{{ query }}"</strong> 
+            <span class="ms-2 badge bg-secondary">{{ resultados|length }} libro{{ resultados|length|pluralize }}</span>
         </p>
         {% endif %}
         
@@ -58,6 +179,21 @@
                     <span class="book-genre">{{ libro.genero|title }}</span>
                     <h4 class="book-title">{{ libro.titulo }}</h4>
                     <p class="book-author"><i class="bi bi-person me-1"></i>{{ libro.autor }}</p>
+                    
+                    <!-- Mostrar valoración promedio del libro (H12) -->
+                    <div class="book-rating mt-2">
+                        {% if libro.total_reseñas > 0 %}
+                        <span class="text-warning">
+                            <i class="bi bi-star-fill"></i>
+                            <strong>{{ libro.promedio_calificacion }}</strong>
+                        </span>
+                        <small class="text-muted ms-1">({{ libro.total_reseñas }} reseña{{ libro.total_reseñas|pluralize }})</small>
+                        {% else %}
+                        <small class="text-muted">
+                            <i class="bi bi-star"></i> Sin reseñas aún
+                        </small>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
             {% endfor %}

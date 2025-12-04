@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Seguidores{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="bi bi-heart-fill"></i> Tus Seguidores
+            </h4>
+        </div>
+        <div class="card-body">
+            {% if seguidores %}
+                <div class="row">
+                    {% for seguimiento in seguidores %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h5 class="card-title mb-1">
+                                                <a href="{% url 'perfil_usuario_publico' seguimiento.seguidor.id %}" class="text-decoration-none">
+                                                    {{ seguimiento.seguidor.username }}
+                                                </a>
+                                            </h5>
+                                            {% if seguimiento.seguidor.email %}
+                                                <p class="text-muted small mb-2">
+                                                    <i class="bi bi-envelope"></i> {{ seguimiento.seguidor.email }}
+                                                </p>
+                                            {% endif %}
+                                            <small class="text-muted">
+                                                Te sigue desde {{ seguimiento.fecha|date:"d/m/Y" }}
+                                            </small>
+                                        </div>
+                                        <div>
+                                            {% if seguimiento.seguidor != user %}
+                                                {% if seguimiento.seguidor in request.user.siguiendo.all %}
+                                                    <a href="{% url 'dejar_seguir_usuario' seguimiento.seguidor.id %}" 
+                                                       class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-person-check"></i> Siguiendo
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{% url 'seguir_usuario' seguimiento.seguidor.id %}" 
+                                                       class="btn btn-sm btn-primary">
+                                                        <i class="bi bi-person-plus"></i> Seguir
+                                                    </a>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-3 pt-3 border-top">
+                                        <div class="row text-center">
+                                            <div class="col-4">
+                                                <strong>{{ seguimiento.seguidor.reseñas.count }}</strong>
+                                                <div class="small text-muted">Reseñas</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <strong>{{ seguimiento.seguidor.seguidores.count }}</strong>
+                                                <div class="small text-muted">Seguidores</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <strong>{{ seguimiento.seguidor.siguiendo.count }}</strong>
+                                                <div class="small text-muted">Siguiendo</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i>
+                    Aún no tienes seguidores. Comparte más reseñas y listas para que otros usuarios te descubran.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

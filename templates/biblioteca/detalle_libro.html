@@ -95,6 +95,125 @@
                         </div>
                     </div>
                     <p class="review-content">{{ reseña.comentario }}</p>
+                    
+                    <!-- Valoración de la reseña (H9) -->
+                    <div class="review-rating-stats mb-3 p-3 bg-light rounded">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-star-fill text-warning" style="font-size: 1.5rem;"></i>
+                                    <div>
+                                        <strong style="font-size: 1.3rem;">{{ reseña.promedio_valoracion|floatformat:1 }}</strong>
+                                        <small class="text-muted ms-1">({{ reseña.total_valoraciones }} valoraciones)</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                                {% if user.is_authenticated and user != reseña.usuario %}
+                                <a href="{% url 'valorar_reseña' reseña.id %}" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-star"></i> Valorar reseña
+                                </a>
+                                {% elif user == reseña.usuario %}
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i> Es tu reseña
+                                </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Comentarios de la reseña (H6, H7, H8) -->
+                    <div class="comments-section mt-3">
+                        <div class="comments-header d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">
+                                <i class="bi bi-chat-text"></i> 
+                                Comentarios ({{ reseña.comentarios.count }})
+                            </h6>
+                            {% if user.is_authenticated %}
+                            <a href="{% url 'crear_comentario' reseña.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-plus-circle"></i> Comentar
+                            </a>
+                            {% endif %}
+                        </div>
+                        
+                        {% if reseña.comentarios.all %}
+                        <div class="comments-list" style="max-height: 400px; overflow-y: auto;">
+                            {% for comentario in reseña.comentarios.all %}
+                                {% if not comentario.padre %}
+                                <!-- Comentario principal -->
+                                <div class="comment-item p-3 mb-2 border rounded bg-light">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <strong>{{ comentario.usuario.username }}</strong>
+                                            <small class="text-muted ms-2">{{ comentario.fecha|date:"d/m/Y H:i" }}</small>
+                                        </div>
+                                        <div class="btn-group btn-group-sm">
+                                            {% if user == comentario.usuario %}
+                                                <a href="{% url 'editar_comentario' comentario.id %}" 
+                                                   class="btn btn-sm btn-outline-warning" 
+                                                   title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a href="{% url 'eliminar_comentario' comentario.id %}" 
+                                                   class="btn btn-sm btn-outline-danger" 
+                                                   title="Eliminar">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            {% endif %}
+                                            {% if user.is_authenticated %}
+                                                <a href="{% url 'responder_comentario' comentario.id %}" 
+                                                   class="btn btn-sm btn-outline-primary" 
+                                                   title="Responder">
+                                                    <i class="bi bi-reply"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <p class="mb-0">{{ comentario.contenido }}</p>
+                                    
+                                    <!-- Respuestas anidadas (H16) -->
+                                    {% if comentario.respuestas.exists %}
+                                        <div class="ms-4 mt-2">
+                                            {% for respuesta in comentario.respuestas.all %}
+                                                <div class="comment-item p-2 mb-2 border-start border-primary border-3 bg-white">
+                                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                                        <div>
+                                                            <strong class="small">{{ respuesta.usuario.username }}</strong>
+                                                            <small class="text-muted ms-1" style="font-size: 0.75rem;">{{ respuesta.fecha|date:"d/m/Y H:i" }}</small>
+                                                        </div>
+                                                        {% if user == respuesta.usuario %}
+                                                        <div class="btn-group btn-group-sm">
+                                                            <a href="{% url 'editar_comentario' respuesta.id %}" 
+                                                               class="btn btn-sm btn-outline-warning" 
+                                                               style="font-size: 0.7rem; padding: 0.15rem 0.3rem;"
+                                                               title="Editar">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </a>
+                                                            <a href="{% url 'eliminar_comentario' respuesta.id %}" 
+                                                               class="btn btn-sm btn-outline-danger" 
+                                                               style="font-size: 0.7rem; padding: 0.15rem 0.3rem;"
+                                                               title="Eliminar">
+                                                                <i class="bi bi-trash"></i>
+                                                            </a>
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <p class="mb-0 small">{{ respuesta.contenido }}</p>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted small mb-0">
+                            <i class="bi bi-info-circle"></i> No hay comentarios aún. ¡Sé el primero!
+                        </p>
+                        {% endif %}
+                    </div>
+                    
                     <div class="review-actions">
                         {% if user.is_authenticated %}
                         <a href="{% url 'reportar_reseña' reseña.id %}" class="btn-review-action">
@@ -120,22 +239,37 @@
                         <i class="bi bi-pencil-square text-accent"></i>
                         Escribir reseña
                     </h3>
-                    <form method="POST" action="{% url 'crear_reseña' libro.id %}">
+                    <form method="POST" action="{% url 'crear_reseña' libro.id %}" id="reseñaForm">
                         {% csrf_token %}
                         <div class="form-group">
                             <label class="form-label">Tu comentario</label>
                             <textarea name="comentario" class="form-control form-control-custom" rows="4" placeholder="Comparte tu opinión sobre este libro..." required></textarea>
                         </div>
+                        
+                        <!-- H13: Selector de estrellas mejorado -->
                         <div class="form-group">
                             <label class="form-label">Calificación</label>
-                            <select name="calificacion" id="calificacion" class="form-select form-select-custom" required>
-                                <option value="1">1 ⭐</option>
-                                <option value="2">2 ⭐</option>
-                                <option value="3">3 ⭐</option>
-                                <option value="4">4 ⭐</option>
-                                <option value="5" selected>5 ⭐</option>
-                            </select>
+                            <div class="star-rating-input" id="starRatingInput">
+                                <input type="radio" name="calificacion" value="5" id="rating5" checked>
+                                <label for="rating5" title="5 estrellas - Excelente">⭐</label>
+                                
+                                <input type="radio" name="calificacion" value="4" id="rating4">
+                                <label for="rating4" title="4 estrellas - Bueno">⭐</label>
+                                
+                                <input type="radio" name="calificacion" value="3" id="rating3">
+                                <label for="rating3" title="3 estrellas - Regular">⭐</label>
+                                
+                                <input type="radio" name="calificacion" value="2" id="rating2">
+                                <label for="rating2" title="2 estrellas - Malo">⭐</label>
+                                
+                                <input type="radio" name="calificacion" value="1" id="rating1">
+                                <label for="rating1" title="1 estrella - Muy malo">⭐</label>
+                            </div>
+                            <div id="ratingDescription" class="text-muted small mt-2">
+                                5 estrellas - Excelente
+                            </div>
                         </div>
+                        
                         <button type="submit" class="btn btn-submit w-100">
                             <i class="bi bi-send"></i>
                             Publicar reseña
@@ -147,4 +281,92 @@
         </div>
     </div>
 </section>
+
+<style>
+    /* H13: Estilos para calificación con estrellas */
+    .star-rating-input {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 5px;
+        font-size: 2rem;
+    }
+
+    .star-rating-input input[type="radio"] {
+        display: none;
+    }
+
+    .star-rating-input label {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        filter: grayscale(100%);
+        opacity: 0.5;
+    }
+
+    .star-rating-input label:hover,
+    .star-rating-input label:hover ~ label {
+        filter: grayscale(0%);
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    .star-rating-input input[type="radio"]:checked ~ label {
+        filter: grayscale(0%);
+        opacity: 1;
+    }
+
+    .star-rating-input input[type="radio"]:checked + label {
+        filter: grayscale(0%);
+        opacity: 1;
+    }
+
+    #ratingDescription {
+        font-weight: 500;
+        min-height: 20px;
+    }
+</style>
+
+<script>
+    // H13: JavaScript para selector de estrellas interactivo
+    document.addEventListener('DOMContentLoaded', function() {
+        const ratingInputs = document.querySelectorAll('input[name="calificacion"]');
+        const ratingDescription = document.getElementById('ratingDescription');
+        
+        const descriptions = {
+            '1': '1 estrella - Muy malo',
+            '2': '2 estrellas - Malo',
+            '3': '3 estrellas - Regular',
+            '4': '4 estrellas - Bueno',
+            '5': '5 estrellas - Excelente'
+        };
+        
+        // Actualizar descripción al cambiar selección
+        ratingInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                ratingDescription.textContent = descriptions[this.value];
+                ratingDescription.style.color = this.value >= 4 ? '#28a745' : (this.value == 3 ? '#ffc107' : '#dc3545');
+            });
+        });
+        
+        // Actualizar descripción al hacer hover
+        const labels = document.querySelectorAll('.star-rating-input label');
+        labels.forEach(label => {
+            label.addEventListener('mouseenter', function() {
+                const value = this.getAttribute('for').replace('rating', '');
+                ratingDescription.textContent = descriptions[value];
+                ratingDescription.style.color = '#6c757d';
+            });
+        });
+        
+        // Restaurar descripción al salir del hover
+        document.getElementById('starRatingInput').addEventListener('mouseleave', function() {
+            const checked = document.querySelector('input[name="calificacion"]:checked');
+            if (checked) {
+                const value = checked.value;
+                ratingDescription.textContent = descriptions[value];
+                ratingDescription.style.color = value >= 4 ? '#28a745' : (value == 3 ? '#ffc107' : '#dc3545');
+            }
+        });
+    });
+</script>
 {% endblock %}

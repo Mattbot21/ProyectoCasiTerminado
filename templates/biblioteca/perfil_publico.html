@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Perfil de {{ usuario_perfil.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Encabezado del perfil -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                             style="width: 80px; height: 80px; font-size: 2rem;">
+                            {{ usuario_perfil.username|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <h2 class="mb-1">{{ usuario_perfil.username }}</h2>
+                            {% if usuario_perfil.email %}
+                                <p class="text-muted mb-0">
+                                    <i class="bi bi-envelope"></i> {{ usuario_perfil.email }}
+                                </p>
+                            {% endif %}
+                            <small class="text-muted">
+                                Miembro desde {{ usuario_perfil.date_joined|date:"F Y" }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end">
+                    {% if not es_propio %}
+                        {% if esta_siguiendo %}
+                            <a href="{% url 'dejar_seguir_usuario' usuario_perfil.id %}" class="btn btn-outline-danger">
+                                <i class="bi bi-person-check-fill"></i> Siguiendo
+                            </a>
+                        {% else %}
+                            <a href="{% url 'seguir_usuario' usuario_perfil.id %}" class="btn btn-primary">
+                                <i class="bi bi-person-plus-fill"></i> Seguir
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge bg-info">Tu Perfil</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="row mt-4 text-center">
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h3 class="mb-0">{{ reseñas|length }}</h3>
+                            <small class="text-muted">Reseñas</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h3 class="mb-0">{{ listas|length }}</h3>
+                            <small class="text-muted">Listas</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h3 class="mb-0">
+                                <a href="{% url 'lista_seguidores' %}" class="text-decoration-none text-dark">
+                                    {{ total_seguidores }}
+                                </a>
+                            </h3>
+                            <small class="text-muted">Seguidores</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h3 class="mb-0">
+                                <a href="{% url 'lista_siguiendo' %}" class="text-decoration-none text-dark">
+                                    {{ total_siguiendo }}
+                                </a>
+                            </h3>
+                            <small class="text-muted">Siguiendo</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Reseñas Recientes -->
+        <div class="col-md-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-star-fill"></i> Reseñas Recientes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if reseñas %}
+                        {% for reseña in reseñas %}
+                            <div class="card mb-3 border-start border-primary border-3">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-2">
+                                            {% if reseña.libro.portada %}
+                                                <img src="{{ reseña.libro.portada.url }}" 
+                                                     alt="{{ reseña.libro.titulo }}"
+                                                     class="img-fluid rounded">
+                                            {% else %}
+                                                <div class="bg-secondary text-white p-3 rounded text-center">
+                                                    <i class="bi bi-book"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-10">
+                                            <h6>
+                                                <a href="{% url 'detalle_libro' reseña.libro.id %}" class="text-decoration-none">
+                                                    {{ reseña.libro.titulo }}
+                                                </a>
+                                            </h6>
+                                            <div class="mb-2">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= reseña.calificacion %}
+                                                        <i class="bi bi-star-fill text-warning"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-star text-warning"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            <p class="small mb-1">
+                                                {{ reseña.texto|truncatewords:30 }}
+                                            </p>
+                                            <small class="text-muted">{{ reseña.fecha|date:"d/m/Y" }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">
+                            <i class="bi bi-inbox"></i> Aún no hay reseñas
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Listas -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-ul"></i> Listas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if listas %}
+                        <div class="list-group list-group-flush">
+                            {% for lista in listas %}
+                                <a href="{% url 'detalle_lista' lista.id %}" 
+                                   class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ lista.nombre }}</h6>
+                                        <small class="badge bg-primary rounded-pill">
+                                            {{ lista.libros.count }}
+                                        </small>
+                                    </div>
+                                    {% if lista.descripcion %}
+                                        <p class="mb-1 small text-muted">
+                                            {{ lista.descripcion|truncatewords:10 }}
+                                        </p>
+                                    {% endif %}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">
+                            <i class="bi bi-inbox"></i> Aún no hay listas
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
