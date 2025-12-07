@@ -6,6 +6,36 @@ class LibroForm(forms.ModelForm):
     class Meta:
         model = Libro
         fields = ['titulo', 'autor', 'descripcion', 'categoria', 'genero', 'fecha_publicacion', 'portada']
+        widgets = {
+            'titulo': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Título del libro'
+            }),
+            'autor': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Autor del libro'
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Descripción del libro...'
+            }),
+            'categoria': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'genero': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'fecha_publicacion': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'placeholder': 'Fecha de publicación'
+            }),
+            'portada': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
+            })
+        }
 
 
 class ReseñaForm(forms.ModelForm):

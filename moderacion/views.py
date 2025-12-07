@@ -12,6 +12,12 @@ from biblioteca.models import Reseña, Comentario
 @login_required
 def reportar_reseña(request, reseña_id):
     reseña = get_object_or_404(Reseña, id=reseña_id)
+    
+    # Evitar que el usuario reporte su propia reseña
+    if reseña.usuario == request.user:
+        messages.error(request, "No puedes reportar tu propia reseña.")
+        return redirect('detalle_libro', reseña.libro.id)
+    
     if request.method == 'POST':
         form = ReporteForm(request.POST)
         if form.is_valid():
@@ -32,6 +38,12 @@ def reportar_reseña(request, reseña_id):
 @login_required
 def reportar_comentario(request, comentario_id):
     comentario = get_object_or_404(Comentario, id=comentario_id)
+    
+    # Evitar que el usuario reporte su propio comentario
+    if comentario.usuario == request.user:
+        messages.error(request, "No puedes reportar tu propio comentario.")
+        return redirect('detalle_libro', comentario.reseña.libro.id)
+    
     if request.method == 'POST':
         form = ReporteForm(request.POST)
         if form.is_valid():
@@ -75,6 +87,11 @@ def resolver_reporte(request, reporte_id):
     if request.method == 'POST':
         form = AccionModeracionForm(request.POST)
         if form.is_valid():
+            # Marcar reporte como revisado PRIMERO
+            reporte.revisado = True
+            reporte.save()
+            
+            # Crear la acción de moderación
             accion = form.save(commit=False)
             accion.reporte = reporte
             accion.administrador = request.user
@@ -109,8 +126,6 @@ def resolver_reporte(request, reporte_id):
             elif accion.accion == 'ignorar':
                 messages.info(request, "Reporte marcado como ignorado. No se tomó ninguna acción.")
             
-            reporte.revisado = True
-            reporte.save()
             return redirect('panel_moderacion')
     else:
         form = AccionModeracionForm()

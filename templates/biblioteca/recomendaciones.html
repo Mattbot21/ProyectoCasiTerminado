@@ -4,138 +4,233 @@
 {% block title %}Recomendaciones{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <!-- Recomendaciones personalizadas -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">
-                <i class="bi bi-lightbulb-fill"></i> Recomendado para Ti
-            </h4>
+<section class="recommendations-section">
+    <div class="container">
+        <!-- Header -->
+        <div class="section-header" data-aos="fade-up">
+            <div class="section-header-content">
+                <h1 class="section-title">
+                    <i class="bi bi-lightbulb-fill me-3"></i>
+                    Recomendado para Ti
+                </h1>
+                <p class="section-subtitle">
+                    Descubre libros que podrían interesarte basados en tus preferencias
+                </p>
+            </div>
         </div>
-        <div class="card-body">
-            <p class="text-muted mb-3">
-                <i class="bi bi-info-circle"></i> {{ razon }}
-            </p>
 
-            {% if libros_recomendados %}
-                <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
-                    {% for libro in libros_recomendados %}
-                        <div class="col">
-                            <div class="card h-100 shadow-sm hover-shadow">
-                                <a href="{% url 'detalle_libro' libro.id %}" class="text-decoration-none">
-                                    {% if libro.portada %}
-                                        <img src="{{ libro.portada.url }}" 
-                                             class="card-img-top" 
-                                             alt="{{ libro.titulo }}"
-                                             style="height: 300px; object-fit: cover;">
-                                    {% else %}
-                                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center" 
-                                             style="height: 300px;">
-                                            <i class="bi bi-book fs-1"></i>
+        <!-- Recomendaciones personalizadas -->
+        <div class="recommendations-card" data-aos="fade-up" data-aos-delay="100">
+            <div class="recommendations-card-header">
+                <div class="info-badge">
+                    <i class="bi bi-info-circle me-2"></i>
+                    {{ razon }}
+                </div>
+            </div>
+            <div class="recommendations-card-body">
+                {% if libros_recomendados %}
+                    <div class="books-grid">
+                        {% for libro in libros_recomendados %}
+                            <div class="book-card-modern" data-aos="zoom-in" data-aos-delay="100">
+                                <a href="{% url 'detalle_libro' libro.id %}" class="book-card-link">
+                                    <div class="book-cover-container">
+                                        {% if libro.portada %}
+                                            <img src="{{ libro.portada.url }}" 
+                                                 class="book-cover-modern" 
+                                                 alt="{{ libro.titulo }}">
+                                        {% else %}
+                                            <div class="book-cover-placeholder">
+                                                <i class="bi bi-book"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div class="book-overlay">
+                                            <span class="view-details">
+                                                <i class="bi bi-eye me-2"></i>Ver Detalles
+                                            </span>
                                         </div>
-                                    {% endif %}
+                                    </div>
                                 </a>
-                                <div class="card-body">
-                                    <h6 class="card-title text-truncate" title="{{ libro.titulo }}">
-                                        <a href="{% url 'detalle_libro' libro.id %}" class="text-decoration-none text-dark">
-                                            {{ libro.titulo }}
-                                        </a>
-                                    </h6>
-                                    <p class="card-text text-muted small text-truncate" title="{{ libro.autor }}">
-                                        <i class="bi bi-person"></i> {{ libro.autor }}
+                                <div class="book-info-modern">
+                                    <h3 class="book-title-modern">
+                                        <a href="{% url 'detalle_libro' libro.id %}">{{ libro.titulo }}</a>
+                                    </h3>
+                                    <p class="book-author-modern">
+                                        <i class="bi bi-person me-1"></i>{{ libro.autor }}
                                     </p>
                                     
                                     {% if libro.promedio %}
-                                        <div class="mb-2">
-                                            {% for i in "12345" %}
-                                                {% if i|add:"0" <= libro.promedio %}
-                                                    <i class="bi bi-star-fill text-warning small"></i>
-                                                {% else %}
-                                                    <i class="bi bi-star text-warning small"></i>
-                                                {% endif %}
-                                            {% endfor %}
-                                            <span class="small text-muted ms-1">
-                                                {{ libro.promedio|floatformat:1 }} ({{ libro.total }})
+                                        <div class="book-rating-modern">
+                                            <div class="stars">
+                                                {% for i in "12345" %}
+                                                    {% if i|add:"0" <= libro.promedio %}
+                                                        <i class="bi bi-star-fill"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            <span class="rating-text">
+                                                {{ libro.promedio|floatformat:1 }} <span class="rating-count">({{ libro.total }})</span>
                                             </span>
                                         </div>
                                     {% endif %}
 
-                                    <span class="badge bg-info text-dark">
+                                    <span class="genre-badge-modern">
                                         {{ libro.get_genero_display }}
                                     </span>
                                 </div>
                             </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state-recommendations">
+                        <div class="empty-icon">
+                            <i class="bi bi-lightbulb"></i>
                         </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="alert alert-info text-center">
-                    <i class="bi bi-info-circle"></i>
-                    No hay suficiente información para generar recomendaciones. 
-                    <a href="{% url 'lista_libros' %}" class="alert-link">Explora libros</a> 
-                    y crea reseñas para obtener recomendaciones personalizadas.
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Libros recomendados por usuarios que sigues -->
-    {% if libros_seguidos %}
-        <div class="card shadow-sm">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0">
-                    <i class="bi bi-people-fill"></i> Recomendados por Usuarios que Sigues
-                </h4>
+                        <h3>No hay recomendaciones disponibles</h3>
+                        <p>
+                            No hay suficiente información para generar recomendaciones personalizadas.<br>
+                            <a href="{% url 'lista_libros' %}" class="link-accent">Explora libros</a> 
+                            y crea reseñas para obtener mejores recomendaciones.
+                        </p>
+                    </div>
+                {% endif %}
             </div>
-            <div class="card-body">
-                <div class="row row-cols-1 row-cols-md-3 row-cols-lg-6 g-3">
-                    {% for libro in libros_seguidos %}
-                        <div class="col">
-                            <div class="card h-100 shadow-sm hover-shadow">
-                                <a href="{% url 'detalle_libro' libro.id %}" class="text-decoration-none">
-                                    {% if libro.portada %}
-                                        <img src="{{ libro.portada.url }}" 
-                                             class="card-img-top" 
-                                             alt="{{ libro.titulo }}"
-                                             style="height: 200px; object-fit: cover;">
-                                    {% else %}
-                                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center" 
-                                             style="height: 200px;">
-                                            <i class="bi bi-book"></i>
+        </div>
+
+        <!-- Libros recomendados por usuarios que sigues -->
+        {% if libros_seguidos %}
+            <div class="recommendations-card mt-5" data-aos="fade-up" data-aos-delay="200">
+                <div class="recommendations-card-header">
+                    <h2 class="card-title-modern">
+                        <i class="bi bi-people-fill me-2"></i>
+                        Recomendados por Usuarios que Sigues
+                    </h2>
+                </div>
+                <div class="recommendations-card-body">
+                    <div class="books-grid-compact">
+                        {% for libro in libros_seguidos %}
+                            <div class="book-card-compact" data-aos="fade-up" data-aos-delay="100">
+                                <a href="{% url 'detalle_libro' libro.id %}" class="book-card-link">
+                                    <div class="book-cover-compact">
+                                        {% if libro.portada %}
+                                            <img src="{{ libro.portada.url }}" alt="{{ libro.titulo }}">
+                                        {% else %}
+                                            <div class="cover-placeholder-compact">
+                                                <i class="bi bi-book"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div class="compact-overlay">
+                                            <i class="bi bi-plus-circle"></i>
                                         </div>
-                                    {% endif %}
+                                    </div>
                                 </a>
-                                <div class="card-body p-2">
-                                    <h6 class="card-title small text-truncate mb-1" title="{{ libro.titulo }}">
-                                        {{ libro.titulo }}
-                                    </h6>
+                                <div class="book-info-compact">
+                                    <h4 class="book-title-compact">{{ libro.titulo }}</h4>
                                     {% if libro.promedio %}
-                                        <div>
+                                        <div class="rating-compact">
                                             {% for i in "12345" %}
                                                 {% if i|add:"0" <= libro.promedio %}
-                                                    <i class="bi bi-star-fill text-warning" style="font-size: 0.7rem;"></i>
+                                                    <i class="bi bi-star-fill"></i>
                                                 {% else %}
-                                                    <i class="bi bi-star text-warning" style="font-size: 0.7rem;"></i>
+                                                    <i class="bi bi-star"></i>
                                                 {% endif %}
                                             {% endfor %}
                                         </div>
                                     {% endif %}
                                 </div>
                             </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Paginación de Recomendaciones -->
+                    {% if page_obj.has_other_pages %}
+                    <div class="pagination-wrapper" data-aos="fade-up">
+                        <nav aria-label="Navegación de páginas">
+                            <ul class="pagination-custom">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item-custom">
+                                    <a class="page-link-custom page-nav" href="?page=1" title="Primera página">
+                                        <i class="bi bi-chevron-bar-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item-custom">
+                                    <a class="page-link-custom page-nav" href="?page={{ page_obj.previous_page_number }}" title="Anterior">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item-custom disabled">
+                                    <span class="page-link-custom page-nav"><i class="bi bi-chevron-bar-left"></i></span>
+                                </li>
+                                <li class="page-item-custom disabled">
+                                    <span class="page-link-custom page-nav"><i class="bi bi-chevron-left"></i></span>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                    <li class="page-item-custom active">
+                                        <span class="page-link-custom page-number">{{ num }}</span>
+                                    </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item-custom">
+                                        <a class="page-link-custom page-number" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                    {% elif num == 1 and page_obj.number > 4 %}
+                                    <li class="page-item-custom">
+                                        <a class="page-link-custom page-number" href="?page=1">1</a>
+                                    </li>
+                                    <li class="page-item-custom disabled">
+                                        <span class="page-link-custom page-ellipsis">...</span>
+                                    </li>
+                                    {% elif num == page_obj.paginator.num_pages and page_obj.number < page_obj.paginator.num_pages|add:'-3' %}
+                                    <li class="page-item-custom disabled">
+                                        <span class="page-link-custom page-ellipsis">...</span>
+                                    </li>
+                                    <li class="page-item-custom">
+                                        <a class="page-link-custom page-number" href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                <li class="page-item-custom">
+                                    <a class="page-link-custom page-nav" href="?page={{ page_obj.next_page_number }}" title="Siguiente">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item-custom">
+                                    <a class="page-link-custom page-nav" href="?page={{ page_obj.paginator.num_pages }}" title="Última página">
+                                        <i class="bi bi-chevron-bar-right"></i>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item-custom disabled">
+                                    <span class="page-link-custom page-nav"><i class="bi bi-chevron-right"></i></span>
+                                </li>
+                                <li class="page-item-custom disabled">
+                                    <span class="page-link-custom page-nav"><i class="bi bi-chevron-bar-right"></i></span>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        
+                        <div class="pagination-info">
+                            <span class="pagination-badge">
+                                Página <strong>{{ page_obj.number }}</strong> de <strong>{{ page_obj.paginator.num_pages }}</strong>
+                            </span>
+                            <span class="pagination-separator">•</span>
+                            <span class="pagination-total">
+                                <strong>{{ page_obj.paginator.count }}</strong> recomendación{{ page_obj.paginator.count|pluralize:"es" }}
+                            </span>
                         </div>
-                    {% endfor %}
+                    </div>
+                    {% endif %}
+                    
                 </div>
             </div>
-        </div>
-    {% endif %}
-</div>
-
-<style>
-    .hover-shadow {
-        transition: box-shadow 0.3s ease;
-    }
-    .hover-shadow:hover {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-    }
-</style>
+        {% endif %}
+    </div>
+</section>
 {% endblock %}

@@ -148,7 +148,7 @@
         {% if query %}
         <p class="text-muted mb-4" data-aos="fade-up">
             Resultados para: <strong class="text-accent">"{{ query }}"</strong> 
-            <span class="ms-2 badge bg-secondary">{{ resultados|length }} libro{{ resultados|length|pluralize }}</span>
+            <span class="ms-2 badge bg-secondary">{{ page_obj.paginator.count }} libro{{ page_obj.paginator.count|pluralize }}</span>
         </p>
         {% endif %}
         
@@ -198,6 +198,104 @@
             </div>
             {% endfor %}
         </div>
+        
+        <!-- Paginación con filtros preservados -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination-wrapper" data-aos="fade-up">
+            <nav aria-label="Navegación de páginas">
+                <ul class="pagination-custom">
+                    <!-- Primera página -->
+                    {% if page_obj.has_previous %}
+                    <li class="page-item-custom">
+                        <a class="page-link-custom page-nav" href="?q={{ query }}&genero={{ genero }}&valoracion={{ valoracion_min }}&orden={{ orden }}&page=1" aria-label="Primera página" title="Primera página">
+                            <i class="bi bi-chevron-bar-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item-custom">
+                        <a class="page-link-custom page-nav" href="?q={{ query }}&genero={{ genero }}&valoracion={{ valoracion_min }}&orden={{ orden }}&page={{ page_obj.previous_page_number }}" aria-label="Página anterior" title="Anterior">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item-custom disabled">
+                        <span class="page-link-custom page-nav">
+                            <i class="bi bi-chevron-bar-left"></i>
+                        </span>
+                    </li>
+                    <li class="page-item-custom disabled">
+                        <span class="page-link-custom page-nav">
+                            <i class="bi bi-chevron-left"></i>
+                        </span>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Números de página -->
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item-custom active">
+                            <span class="page-link-custom page-number">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item-custom">
+                            <a class="page-link-custom page-number" href="?q={{ query }}&genero={{ genero }}&valoracion={{ valoracion_min }}&orden={{ orden }}&page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% elif num == 1 and page_obj.number > 4 %}
+                        <li class="page-item-custom">
+                            <a class="page-link-custom page-number" href="?q={{ query }}&genero={{ genero }}&valoracion={{ valoracion_min }}&orden={{ orden }}&page=1">1</a>
+                        </li>
+                        <li class="page-item-custom disabled">
+                            <span class="page-link-custom page-ellipsis">...</span>
+                        </li>
+                        {% elif num == page_obj.paginator.num_pages and page_obj.number < page_obj.paginator.num_pages|add:'-3' %}
+                        <li class="page-item-custom disabled">
+                            <span class="page-link-custom page-ellipsis">...</span>
+                        </li>
+                        <li class="page-item-custom">
+                            <a class="page-link-custom page-number" href="?q={{ query }}&genero={{ genero }}&valoracion={{ valoracion_min }}&orden={{ orden }}&page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <!-- Última página -->
+                    {% if page_obj.has_next %}
+                    <li class="page-item-custom">
+                        <a class="page-link-custom page-nav" href="?q={{ query }}&genero={{ genero }}&valoracion={{ valoracion_min }}&orden={{ orden }}&page={{ page_obj.next_page_number }}" aria-label="Página siguiente" title="Siguiente">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item-custom">
+                        <a class="page-link-custom page-nav" href="?q={{ query }}&genero={{ genero }}&valoracion={{ valoracion_min }}&orden={{ orden }}&page={{ page_obj.paginator.num_pages }}" aria-label="Última página" title="Última página">
+                            <i class="bi bi-chevron-bar-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item-custom disabled">
+                        <span class="page-link-custom page-nav">
+                            <i class="bi bi-chevron-right"></i>
+                        </span>
+                    </li>
+                    <li class="page-item-custom disabled">
+                        <span class="page-link-custom page-nav">
+                            <i class="bi bi-chevron-bar-right"></i>
+                        </span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            
+            <!-- Información de página -->
+            <div class="pagination-info">
+                <span class="pagination-badge">
+                    Página <strong>{{ page_obj.number }}</strong> de <strong>{{ page_obj.paginator.num_pages }}</strong>
+                </span>
+                <span class="pagination-separator">•</span>
+                <span class="pagination-total">
+                    <strong>{{ page_obj.paginator.count }}</strong> resultado{{ page_obj.paginator.count|pluralize }}
+                </span>
+            </div>
+        </div>
+        {% endif %}
+        
         {% else %}
         <div class="empty-state" data-aos="fade-up">
             <i class="bi bi-search empty-state-icon"></i>

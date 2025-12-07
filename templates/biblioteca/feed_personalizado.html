@@ -4,134 +4,234 @@
 {% block title %}Feed Personalizado{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <!-- Sidebar -->
-        <div class="col-md-3 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h6 class="mb-0">
-                        <i class="bi bi-people"></i> Tu Red
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'lista_siguiendo' %}" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-person-check"></i> Siguiendo ({{ total_siguiendo }})
-                        </a>
-                        <a href="{% url 'lista_seguidores' %}" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-heart"></i> Seguidores
-                        </a>
-                        <a href="{% url 'recomendaciones' %}" class="btn btn-outline-success btn-sm">
-                            <i class="bi bi-star"></i> Recomendaciones
-                        </a>
+<section class="feed-section">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Sidebar -->
+            <div class="col-lg-3 col-md-4" data-aos="fade-right">
+                <div class="feed-sidebar">
+                    <div class="sidebar-card">
+                        <div class="sidebar-card-header">
+                            <h3><i class="bi bi-people me-2"></i>Tu Red</h3>
+                        </div>
+                        <div class="sidebar-card-body">
+                            <a href="{% url 'lista_siguiendo' %}" class="sidebar-link">
+                                <i class="bi bi-person-check"></i>
+                                <span>Siguiendo</span>
+                                <span class="sidebar-badge">{{ total_siguiendo }}</span>
+                            </a>
+                            <a href="{% url 'lista_seguidores' %}" class="sidebar-link">
+                                <i class="bi bi-heart"></i>
+                                <span>Seguidores</span>
+                            </a>
+                            <a href="{% url 'recomendaciones' %}" class="sidebar-link accent">
+                                <i class="bi bi-star"></i>
+                                <span>Recomendaciones</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Feed principal -->
-        <div class="col-md-9">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">
-                        <i class="bi bi-rss-fill"></i> Actividad Reciente
-                    </h4>
-                </div>
-                <div class="card-body">
-                    {% if reseñas %}
-                        {% for reseña in reseñas %}
-                            <div class="card mb-3 border-start border-primary border-3">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <h6 class="mb-1">
-                                                <a href="{% url 'perfil_usuario_publico' reseña.usuario.id %}" class="text-decoration-none">
-                                                    <i class="bi bi-person-circle"></i> {{ reseña.usuario.username }}
-                                                </a>
-                                                <span class="text-muted">reseñó</span>
-                                            </h6>
+            <!-- Feed principal -->
+            <div class="col-lg-9 col-md-8">
+                <div class="feed-main" data-aos="fade-up">
+                    <div class="feed-header">
+                        <h1><i class="bi bi-rss-fill me-3"></i>Actividad Reciente</h1>
+                        <p class="feed-subtitle">Descubre qué están leyendo las personas que sigues</p>
+                    </div>
+
+                    <div class="feed-content">
+                        {% if reseñas %}
+                            {% for reseña in reseñas %}
+                                <div class="feed-item" data-aos="fade-up" data-aos-delay="100">
+                                    <div class="feed-item-header">
+                                        <div class="user-info">
+                                            <a href="{% url 'perfil_usuario_publico' reseña.usuario.id %}" class="user-link">
+                                                <div class="user-avatar">
+                                                    <i class="bi bi-person-circle"></i>
+                                                </div>
+                                                <div class="user-details">
+                                                    <span class="user-name">{{ reseña.usuario.username }}</span>
+                                                    <span class="user-action">reseñó un libro</span>
+                                                </div>
+                                            </a>
                                         </div>
-                                        <small class="text-muted">{{ reseña.fecha|timesince }} atrás</small>
+                                        <span class="feed-time">
+                                            <i class="bi bi-clock me-1"></i>{{ reseña.fecha|timesince }} atrás
+                                        </span>
                                     </div>
 
-                                    <div class="row">
-                                        <div class="col-md-2">
-                                            {% if reseña.libro.portada %}
-                                                <img src="{{ reseña.libro.portada.url }}" 
-                                                     alt="{{ reseña.libro.titulo }}"
-                                                     class="img-fluid rounded shadow-sm">
-                                            {% else %}
-                                                <div class="bg-secondary text-white p-4 rounded text-center">
-                                                    <i class="bi bi-book fs-1"></i>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="col-md-10">
-                                            <h5>
-                                                <a href="{% url 'detalle_libro' reseña.libro.id %}" class="text-decoration-none">
-                                                    {{ reseña.libro.titulo }}
-                                                </a>
-                                            </h5>
-                                            <p class="text-muted small mb-2">
-                                                <i class="bi bi-person"></i> {{ reseña.libro.autor }}
-                                            </p>
-
-                                            <!-- Calificación -->
-                                            <div class="mb-2">
-                                                {% for i in "12345" %}
-                                                    {% if forloop.counter <= reseña.calificacion %}
-                                                        <i class="bi bi-star-fill text-warning"></i>
-                                                    {% else %}
-                                                        <i class="bi bi-star text-warning"></i>
-                                                    {% endif %}
-                                                {% endfor %}
-                                                <span class="ms-1 text-muted">{{ reseña.calificacion }}/5</span>
-                                            </div>
-
-                                            <!-- Texto de la reseña -->
-                                            <p class="card-text">
-                                                {% if reseña.texto|length > 200 %}
-                                                    {{ reseña.texto|slice:":200" }}...
-                                                    <a href="{% url 'detalle_libro' reseña.libro.id %}" class="text-decoration-none">
-                                                        Leer más
+                                    <div class="feed-item-body">
+                                        <div class="book-preview">
+                                            <div class="book-preview-cover">
+                                                {% if reseña.libro.portada %}
+                                                    <a href="{% url 'detalle_libro' reseña.libro.id %}">
+                                                        <img src="{{ reseña.libro.portada.url }}" alt="{{ reseña.libro.titulo }}">
                                                     </a>
                                                 {% else %}
-                                                    {{ reseña.texto }}
+                                                    <div class="book-preview-placeholder">
+                                                        <i class="bi bi-book"></i>
+                                                    </div>
                                                 {% endif %}
-                                            </p>
+                                            </div>
+                                            <div class="book-preview-info">
+                                                <h3 class="book-preview-title">
+                                                    <a href="{% url 'detalle_libro' reseña.libro.id %}">
+                                                        {{ reseña.libro.titulo }}
+                                                    </a>
+                                                </h3>
+                                                <p class="book-preview-author">
+                                                    <i class="bi bi-person me-1"></i>{{ reseña.libro.autor }}
+                                                </p>
 
-                                            <div class="d-flex gap-3 text-muted small">
-                                                <span>
-                                                    <i class="bi bi-chat"></i> {{ reseña.comentarios.count }} comentarios
-                                                </span>
-                                                <span>
-                                                    <i class="bi bi-hand-thumbs-up"></i> {{ reseña.valoraciones.count }} valoraciones
-                                                </span>
+                                                <!-- Calificación -->
+                                                <div class="review-rating">
+                                                    {% for i in "12345" %}
+                                                        {% if forloop.counter <= reseña.calificacion %}
+                                                            <i class="bi bi-star-fill"></i>
+                                                        {% else %}
+                                                            <i class="bi bi-star"></i>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    <span class="rating-value">{{ reseña.calificacion }}/5</span>
+                                                </div>
+
+                                                <!-- Texto de la reseña -->
+                                                <div class="review-text">
+                                                    {% if reseña.texto|length > 200 %}
+                                                        {{ reseña.texto|slice:":200" }}...
+                                                        <a href="{% url 'detalle_libro' reseña.libro.id %}" class="read-more">
+                                                            Leer más
+                                                        </a>
+                                                    {% else %}
+                                                        {{ reseña.texto }}
+                                                    {% endif %}
+                                                </div>
+
+                                                <div class="review-stats">
+                                                    <span class="stat-item">
+                                                        <i class="bi bi-chat"></i>
+                                                        {{ reseña.comentarios.count }} comentarios
+                                                    </span>
+                                                    <span class="stat-item">
+                                                        <i class="bi bi-hand-thumbs-up"></i>
+                                                        {{ reseña.valoraciones.count }} valoraciones
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                            {% endfor %}
+                            
+                            <!-- Paginación del Feed -->
+                            {% if page_obj.has_other_pages %}
+                            <div class="pagination-wrapper mt-5" data-aos="fade-up">
+                                <nav aria-label="Navegación de páginas">
+                                    <ul class="pagination-custom">
+                                        {% if page_obj.has_previous %}
+                                        <li class="page-item-custom">
+                                            <a class="page-link-custom page-nav" href="?page=1" title="Primera página">
+                                                <i class="bi bi-chevron-bar-left"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item-custom">
+                                            <a class="page-link-custom page-nav" href="?page={{ page_obj.previous_page_number }}" title="Anterior">
+                                                <i class="bi bi-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item-custom disabled">
+                                            <span class="page-link-custom page-nav"><i class="bi bi-chevron-bar-left"></i></span>
+                                        </li>
+                                        <li class="page-item-custom disabled">
+                                            <span class="page-link-custom page-nav"><i class="bi bi-chevron-left"></i></span>
+                                        </li>
+                                        {% endif %}
+                                        
+                                        {% for num in page_obj.paginator.page_range %}
+                                            {% if page_obj.number == num %}
+                                            <li class="page-item-custom active">
+                                                <span class="page-link-custom page-number">{{ num }}</span>
+                                            </li>
+                                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item-custom">
+                                                <a class="page-link-custom page-number" href="?page={{ num }}">{{ num }}</a>
+                                            </li>
+                                            {% elif num == 1 and page_obj.number > 4 %}
+                                            <li class="page-item-custom">
+                                                <a class="page-link-custom page-number" href="?page=1">1</a>
+                                            </li>
+                                            <li class="page-item-custom disabled">
+                                                <span class="page-link-custom page-ellipsis">...</span>
+                                            </li>
+                                            {% elif num == page_obj.paginator.num_pages and page_obj.number < page_obj.paginator.num_pages|add:'-3' %}
+                                            <li class="page-item-custom disabled">
+                                                <span class="page-link-custom page-ellipsis">...</span>
+                                            </li>
+                                            <li class="page-item-custom">
+                                                <a class="page-link-custom page-number" href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
+                                            </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% if page_obj.has_next %}
+                                        <li class="page-item-custom">
+                                            <a class="page-link-custom page-nav" href="?page={{ page_obj.next_page_number }}" title="Siguiente">
+                                                <i class="bi bi-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item-custom">
+                                            <a class="page-link-custom page-nav" href="?page={{ page_obj.paginator.num_pages }}" title="Última página">
+                                                <i class="bi bi-chevron-bar-right"></i>
+                                            </a>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item-custom disabled">
+                                            <span class="page-link-custom page-nav"><i class="bi bi-chevron-right"></i></span>
+                                        </li>
+                                        <li class="page-item-custom disabled">
+                                            <span class="page-link-custom page-nav"><i class="bi bi-chevron-bar-right"></i></span>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                                
+                                <div class="pagination-info">
+                                    <span class="pagination-badge">
+                                        Página <strong>{{ page_obj.number }}</strong> de <strong>{{ page_obj.paginator.num_pages }}</strong>
+                                    </span>
+                                    <span class="pagination-separator">•</span>
+                                    <span class="pagination-total">
+                                        <strong>{{ page_obj.paginator.count }}</strong> reseña{{ page_obj.paginator.count|pluralize }}
+                                    </span>
+                                </div>
                             </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="alert alert-info text-center">
-                            <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
-                            <h5>Tu feed está vacío</h5>
-                            <p>
-                                {% if total_siguiendo == 0 %}
-                                    Aún no sigues a ningún usuario. 
-                                    <a href="{% url 'lista_libros' %}" class="alert-link">Explora libros</a> 
-                                    para descubrir usuarios con gustos similares.
-                                {% else %}
-                                    Los usuarios que sigues aún no han publicado reseñas.
-                                {% endif %}
-                            </p>
-                        </div>
-                    {% endif %}
+                            {% endif %}
+                            
+                        {% else %}
+                            <div class="empty-state-feed">
+                                <div class="empty-icon">
+                                    <i class="bi bi-rss"></i>
+                                </div>
+                                <h3>Tu feed está vacío</h3>
+                                <p>
+                                    {% if total_siguiendo == 0 %}
+                                        Aún no sigues a ningún usuario.<br>
+                                        <a href="{% url 'lista_libros' %}" class="link-accent">Explora libros</a> 
+                                        para descubrir usuarios con gustos similares.
+                                    {% else %}
+                                        Los usuarios que sigues aún no han publicado reseñas.<br>
+                                        Sé el primero en compartir tu opinión sobre un libro.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}

@@ -44,9 +44,9 @@
                         <span class="badge-count">{{ user.reseñas.count }}</span>
                     </div>
                     <div class="profile-card-body">
-                        {% if user.reseñas.all %}
+                        {% if reseñas %}
                         <div class="profile-list">
-                            {% for reseña in user.reseñas.all %}
+                            {% for reseña in reseñas %}
                             <div class="profile-list-item">
                                 <div class="profile-list-info">
                                     <div class="profile-list-icon">
@@ -79,6 +79,24 @@
                             </div>
                             {% endfor %}
                         </div>
+                        
+                        <!-- Paginación compacta para reseñas -->
+                        {% if tab == 'reseñas' and page_obj.has_other_pages %}
+                        <div class="pagination-compact mt-3">
+                            {% if page_obj.has_previous %}
+                            <a href="?tab=reseñas&page={{ page_obj.previous_page_number }}" class="btn-page-compact">
+                                <i class="bi bi-chevron-left"></i> Anterior
+                            </a>
+                            {% endif %}
+                            <span class="page-info-compact">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                            {% if page_obj.has_next %}
+                            <a href="?tab=reseñas&page={{ page_obj.next_page_number }}" class="btn-page-compact">
+                                Siguiente <i class="bi bi-chevron-right"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
                         {% else %}
                         <div class="empty-state-mini">
                             <i class="bi bi-chat-quote"></i>
@@ -97,9 +115,9 @@
                         <span class="badge-count">{{ user.favoritos.count }}</span>
                     </div>
                     <div class="profile-card-body">
-                        {% if user.favoritos.all %}
+                        {% if favoritos %}
                         <div class="profile-list">
-                            {% for fav in user.favoritos.all %}
+                            {% for fav in favoritos %}
                             <div class="profile-list-item">
                                 <div class="profile-list-info">
                                     <div class="profile-list-icon favorite">
@@ -121,6 +139,24 @@
                             </div>
                             {% endfor %}
                         </div>
+                        
+                        <!-- Paginación compacta para favoritos -->
+                        {% if tab == 'favoritos' and page_obj.has_other_pages %}
+                        <div class="pagination-compact mt-3">
+                            {% if page_obj.has_previous %}
+                            <a href="?tab=favoritos&page={{ page_obj.previous_page_number }}" class="btn-page-compact">
+                                <i class="bi bi-chevron-left"></i> Anterior
+                            </a>
+                            {% endif %}
+                            <span class="page-info-compact">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                            {% if page_obj.has_next %}
+                            <a href="?tab=favoritos&page={{ page_obj.next_page_number }}" class="btn-page-compact">
+                                Siguiente <i class="bi bi-chevron-right"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
                         {% else %}
                         <div class="empty-state-mini">
                             <i class="bi bi-heart"></i>
@@ -180,9 +216,9 @@
                         <span class="badge-count">{{ user.listas.count }}</span>
                     </div>
                     <div class="profile-card-body">
-                        {% if user.listas.all %}
+                        {% if listas %}
                         <div class="profile-list">
-                            {% for lista in user.listas.all %}
+                            {% for lista in listas %}
                             <div class="profile-list-item">
                                 <div class="profile-list-info">
                                     <div class="profile-list-icon list">
@@ -207,6 +243,24 @@
                             </div>
                             {% endfor %}
                         </div>
+                        
+                        <!-- Paginación compacta para listas -->
+                        {% if tab == 'listas' and page_obj.has_other_pages %}
+                        <div class="pagination-compact mt-3">
+                            {% if page_obj.has_previous %}
+                            <a href="?tab=listas&page={{ page_obj.previous_page_number }}" class="btn-page-compact">
+                                <i class="bi bi-chevron-left"></i> Anterior
+                            </a>
+                            {% endif %}
+                            <span class="page-info-compact">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                            {% if page_obj.has_next %}
+                            <a href="?tab=listas&page={{ page_obj.next_page_number }}" class="btn-page-compact">
+                                Siguiente <i class="bi bi-chevron-right"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
                         {% else %}
                         <div class="empty-state-mini">
                             <i class="bi bi-collection"></i>
@@ -215,7 +269,7 @@
                         {% endif %}
                         
                         <div class="profile-card-footer">
-                            <a href="{% url 'crear_lista' %}" class="btn btn-create-list">
+                            <a href="{% url 'crear_lista' %}" class="btn-create-list">
                                 <i class="bi bi-plus-lg me-2"></i>Crear nueva lista
                             </a>
                         </div>
@@ -223,12 +277,12 @@
                 </div>
             </div>
             
-            <!-- History Section -->
+            <!-- History Section (sin paginación, solo link) -->
             <div class="col-12" data-aos="fade-up" data-aos-delay="300">
                 <div class="profile-card">
                     <div class="profile-card-header">
                         <h3><i class="bi bi-clock-history me-2"></i>Mi Historial</h3>
-                        <a href="{% url 'ver_historial' %}" class="btn btn-view-all">
+                        <a href="{% url 'ver_historial' %}" class="btn-view-all">
                             Ver todo <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
@@ -237,4 +291,44 @@
         </div>
     </div>
 </section>
+
+<!-- Estilos para paginación compacta -->
+<style>
+.pagination-compact {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-page-compact {
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--white);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-page-compact:hover {
+    background: rgba(233, 69, 96, 0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.page-info-compact {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+}
+</style>
+
 {% endblock %}

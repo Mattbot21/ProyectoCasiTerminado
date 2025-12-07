@@ -67,10 +67,27 @@
                         </a>
                     </li>
                     {% if user.rol == 'admin' %}
-                    <li class="nav-item">
-                        <a class="nav-link nav-link-admin" href="{% url 'panel_moderacion' %}">
-                            <i class="bi bi-shield-check me-1"></i>Moderación
+                    <li class="nav-item dropdown">
+                        <a class="nav-link nav-link-admin dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-shield-shaded me-1"></i>Panel Admin
                         </a>
+                        <ul class="dropdown-menu glass-dropdown">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'panel_moderacion' %}">
+                                    <i class="bi bi-flag me-2"></i>Panel de Moderación
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'crear_libro' %}">
+                                    <i class="bi bi-plus-circle me-2"></i>Agregar Libro
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'crear_categoria' %}">
+                                    <i class="bi bi-bookmark-plus me-2"></i>Crear Categoría
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     {% endif %}
                     {% endif %}

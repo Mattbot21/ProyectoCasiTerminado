@@ -144,11 +144,17 @@ def buscar_libros(request):
         # Ordenar por mejor valoración (los sin valoración al final)
         resultados = resultados.order_by('-promedio_calificacion_db', '-total_reseñas_db')
     
+    # Paginación: 20 libros por página
+    paginator = Paginator(resultados, 20)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    
     # Obtener géneros disponibles para el filtro
     generos_disponibles = Libro.objects.values_list('genero', flat=True).distinct().order_by('genero')
 
     return render(request, 'biblioteca/buscar_libros.html', {
-        'resultados': resultados,
+        'resultados': page_obj,
+        'page_obj': page_obj,
         'query': query,
         'orden': orden,
         'valoracion_min': valoracion_min,
@@ -158,8 +164,17 @@ def buscar_libros(request):
 
 
 def lista_libros(request):
-    libros = Libro.objects.all()
-    return render(request, 'biblioteca/lista_libros.html', {'libros': libros})
+    libros = Libro.objects.all().order_by('-id')
+    
+    # Paginación: 20 libros por página
+    paginator = Paginator(libros, 20)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'biblioteca/lista_libros.html', {
+        'libros': page_obj,
+        'page_obj': page_obj
+    })
 
 
 # -------------------------------
@@ -654,10 +669,16 @@ def feed_personalizado(request):
     
     reseñas_feed = Reseña.objects.filter(
         usuario_id__in=usuarios_seguidos
-    ).select_related('usuario', 'libro').order_by('-fecha')[:20]
+    ).select_related('usuario', 'libro').order_by('-fecha')
+    
+    # Paginación: 15 reseñas por página
+    paginator = Paginator(reseñas_feed, 15)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
     
     return render(request, 'biblioteca/feed_personalizado.html', {
-        'reseñas': reseñas_feed,
+        'reseñas': page_obj,
+        'page_obj': page_obj,
         'total_siguiendo': len(usuarios_seguidos)
     })
 
@@ -692,7 +713,7 @@ def recomendaciones(request):
         libros_recomendados = Libro.objects.annotate(
             promedio=Avg('reseñas__calificacion'),
             total=Count('reseñas')
-        ).filter(total__gte=1).order_by('-promedio', '-total')[:12]
+        ).filter(total__gte=1).order_by('-promedio', '-total')
         razon = "Libros mejor valorados"
     else:
         contador_generos = Counter(todos_generos)
@@ -704,9 +725,14 @@ def recomendaciones(request):
         ).exclude(id__in=libros_vistos).annotate(
             promedio=Avg('reseñas__calificacion'),
             total=Count('reseñas')
-        ).order_by('-promedio', '-total')[:12]
+        ).order_by('-promedio', '-total')
         
         razon = f"Basado en: {', '.join([g.replace('_', ' ').title() for g in generos_favoritos])}"
+    
+    # Paginación para recomendaciones principales: 20 por página
+    paginator = Paginator(libros_recomendados, 20)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
     
     usuarios_seguidos = Seguimiento.objects.filter(seguidor=request.user).values_list('seguido_id', flat=True)
     libros_seguidos = Libro.objects.filter(
@@ -715,7 +741,8 @@ def recomendaciones(request):
     ).distinct().annotate(promedio=Avg('reseñas__calificacion')).order_by('-promedio')[:6] if usuarios_seguidos else []
     
     return render(request, 'biblioteca/recomendaciones.html', {
-        'libros_recomendados': libros_recomendados,
+        'libros_recomendados': page_obj,
+        'page_obj': page_obj,
         'libros_seguidos': libros_seguidos,
         'razon': razon
     })
