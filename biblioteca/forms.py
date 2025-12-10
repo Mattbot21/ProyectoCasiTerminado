@@ -43,20 +43,6 @@ class ReseñaForm(forms.ModelForm):
     H13: Como autor de reseña, quiero poder adjuntar una calificación con estrellas
     a mi reseña, para complementar mi opinión escrita con una valoración rápida.
     """
-    CALIFICACIONES = [
-        (1, '⭐ 1 estrella - Muy malo'),
-        (2, '⭐⭐ 2 estrellas - Malo'),
-        (3, '⭐⭐⭐ 3 estrellas - Regular'),
-        (4, '⭐⭐⭐⭐ 4 estrellas - Bueno'),
-        (5, '⭐⭐⭐⭐⭐ 5 estrellas - Excelente'),
-    ]
-    
-    calificacion = forms.ChoiceField(
-        choices=CALIFICACIONES,
-        widget=forms.RadioSelect(attrs={'class': 'star-radio'}),
-        label='Calificación',
-        initial=5
-    )
     
     class Meta:
         model = Reseña
@@ -67,6 +53,16 @@ class ReseñaForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Comparte tu opinión sobre este libro...'
             }),
+            'calificacion': forms.RadioSelect(
+                choices=[
+                    (1, '⭐ 1 estrella'),
+                    (2, '⭐⭐ 2 estrellas'),
+                    (3, '⭐⭐⭐ 3 estrellas'),
+                    (4, '⭐⭐⭐⭐ 4 estrellas'),
+                    (5, '⭐⭐⭐⭐⭐ 5 estrellas'),
+                ],
+                attrs={'class': 'star-rating-input'}
+            )
         }
         labels = {
             'comentario': 'Tu reseña',
@@ -89,6 +85,27 @@ class ListaForm(forms.ModelForm):
     class Meta:
         model = Lista
         fields = ['nombre', 'descripcion', 'libros']
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ejemplo: Mis libros de fantasía favoritos'
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Describe el propósito de esta lista...'
+            }),
+            'libros': forms.SelectMultiple(attrs={
+                'class': 'form-control',
+                'size': 10,
+                'multiple': 'multiple'
+            })
+        }
+        labels = {
+            'nombre': 'Nombre de la lista',
+            'descripcion': 'Descripción',
+            'libros': 'Selecciona libros'
+        }
 
 
 class CategoriaForm(forms.ModelForm):

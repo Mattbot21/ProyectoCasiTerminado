@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.paginator import Paginator
+from django.db.models import Count, Q
 from .forms import ReporteForm, AccionModeracionForm
 from .models import Reporte
 from biblioteca.models import Reseña, Comentario
@@ -59,19 +61,65 @@ def reportar_comentario(request, comentario_id):
 
 
 # -----------------------------
-# Panel de moderación (solo admins)
+# Panel de moderación (solo admins) - MEJORADO
 # -----------------------------
 @login_required
 def panel_moderacion(request):
     if not request.user.is_admin:
         return redirect('homeGeneral')
 
-    reportes_pendientes = Reporte.objects.filter(revisado=False).order_by('-fecha')
-    reportes_resueltos = Reporte.objects.filter(revisado=True).order_by('-fecha')
+    # Filtros
+    motivo_filtro = request.GET.get('motivo', '')
+    tipo_filtro = request.GET.get('tipo', '')  # reseña o comentario
+    
+    # Query base
+    reportes_pendientes = Reporte.objects.filter(revisado=False)
+    reportes_resueltos = Reporte.objects.filter(revisado=True)
+    
+    # Aplicar filtro de motivo
+    if motivo_filtro:
+        reportes_pendientes = reportes_pendientes.filter(motivo=motivo_filtro)
+        reportes_resueltos = reportes_resueltos.filter(motivo=motivo_filtro)
+    
+    # Aplicar filtro de tipo
+    if tipo_filtro == 'reseña':
+        reportes_pendientes = reportes_pendientes.filter(reseña__isnull=False)
+        reportes_resueltos = reportes_resueltos.filter(reseña__isnull=False)
+    elif tipo_filtro == 'comentario':
+        reportes_pendientes = reportes_pendientes.filter(comentario__isnull=False)
+        reportes_resueltos = reportes_resueltos.filter(comentario__isnull=False)
+    
+    # Ordenar
+    reportes_pendientes = reportes_pendientes.select_related('usuario', 'reseña', 'comentario').order_by('-fecha')
+    reportes_resueltos = reportes_resueltos.select_related('usuario', 'reseña', 'comentario').order_by('-fecha')
+    
+    # Paginación - PENDIENTES
+    paginator_pendientes = Paginator(reportes_pendientes, 20)  # 20 por página
+    page_pendientes = request.GET.get('page_pendientes', 1)
+    reportes_pendientes_page = paginator_pendientes.get_page(page_pendientes)
+    
+    # Paginación - RESUELTOS
+    paginator_resueltos = Paginator(reportes_resueltos, 15)  # 15 por página
+    page_resueltos = request.GET.get('page_resueltos', 1)
+    reportes_resueltos_page = paginator_resueltos.get_page(page_resueltos)
+    
+    # Estadísticas generales
+    stats = {
+        'total_pendientes': reportes_pendientes.count(),
+        'total_resueltos': reportes_resueltos.count(),
+        'spam_pendiente': reportes_pendientes.filter(motivo='spam').count(),
+        'inapropiado_pendiente': reportes_pendientes.filter(motivo='inapropiado').count(),
+        'otro_pendiente': reportes_pendientes.filter(motivo='otro').count(),
+        'reseñas_reportadas': Reporte.objects.filter(revisado=False, reseña__isnull=False).count(),
+        'comentarios_reportados': Reporte.objects.filter(revisado=False, comentario__isnull=False).count(),
+    }
 
     return render(request, 'moderacion/panel.html', {
-        'reportes_pendientes': reportes_pendientes,
-        'reportes_resueltos': reportes_resueltos
+        'reportes_pendientes': reportes_pendientes_page,
+        'reportes_resueltos': reportes_resueltos_page,
+        'stats': stats,
+        'motivo_filtro': motivo_filtro,
+        'tipo_filtro': tipo_filtro,
     })
 
 

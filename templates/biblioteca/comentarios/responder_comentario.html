@@ -1,0 +1,544 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Responder Comentario - Librería Digital{% endblock %}
+
+{% block content %}
+<section class="reply-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="reply-header" data-aos="fade-down">
+                    <div class="reply-icon">
+                        <i class="bi bi-reply-fill"></i>
+                    </div>
+                    <h2 class="reply-title">Responder a Comentario</h2>
+                    <p class="reply-subtitle">Participa en la conversación</p>
+                </div>
+
+                <!-- Comentario Original Card -->
+                <div class="original-comment-card" data-aos="fade-up">
+                    <div class="original-comment-header">
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div class="user-details">
+                                <h6 class="username">{{ comentario_padre.usuario.username }}</h6>
+                                <span class="timestamp">
+                                    <i class="bi bi-clock"></i>
+                                    {{ comentario_padre.fecha|date:"d/m/Y H:i" }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="book-badge">
+                            <i class="bi bi-book"></i>
+                            {{ comentario_padre.reseña.libro.titulo }}
+                        </div>
+                    </div>
+                    <div class="original-comment-body">
+                        <p class="comment-text">{{ comentario_padre.contenido }}</p>
+                    </div>
+                </div>
+
+                <!-- Formulario de Respuesta -->
+                <div class="reply-form-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="reply-form-header">
+                        <i class="bi bi-pencil-square"></i>
+                        <h5>Tu Respuesta</h5>
+                    </div>
+                    
+                    <form method="post" class="reply-form">
+                        {% csrf_token %}
+                        
+                        <div class="form-group-custom">
+                            <label for="{{ form.contenido.id_for_label }}" class="form-label-custom">
+                                <i class="bi bi-chat-left-text"></i>
+                                Escribe tu respuesta
+                            </label>
+                            <div class="textarea-wrapper">
+                                {{ form.contenido }}
+                                <div class="textarea-info">
+                                    <span class="char-count" id="charCount">0 / 500 caracteres</span>
+                                </div>
+                            </div>
+                            {% if form.contenido.errors %}
+                                <div class="error-message">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    {{ form.contenido.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-actions">
+                            <a href="{% url 'detalle_libro' comentario_padre.reseña.libro.id %}" class="btn-custom btn-cancel">
+                                <i class="bi bi-x-circle"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn-custom btn-submit">
+                                <i class="bi bi-send-fill"></i>
+                                Publicar Respuesta
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Info Card -->
+                <div class="info-card" data-aos="fade-up" data-aos-delay="200">
+                    <i class="bi bi-info-circle"></i>
+                    <p>Tu respuesta será visible para todos los usuarios. Mantén un tono respetuoso y constructivo.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* ============================================
+   REPLY SECTION - DISEÑO PROFESIONAL
+   ============================================ */
+
+.reply-section {
+    min-height: 100vh;
+    padding: 80px 0 60px;
+    background: var(--primary-dark);
+}
+
+/* Header */
+.reply-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.reply-icon {
+    width: 70px;
+    height: 70px;
+    background: var(--gradient-accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    box-shadow: 0 10px 30px rgba(233, 69, 96, 0.3);
+    animation: float 3s ease-in-out infinite;
+}
+
+.reply-icon i {
+    font-size: 32px;
+    color: white;
+}
+
+.reply-title {
+    font-family: var(--font-heading);
+    font-size: 32px;
+    color: var(--white);
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.reply-subtitle {
+    color: var(--gray-400);
+    font-size: 16px;
+    margin: 0;
+}
+
+/* Comentario Original Card */
+.original-comment-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.original-comment-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--gradient-accent);
+}
+
+.original-comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    width: 48px;
+    height: 48px;
+    background: var(--gradient-accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(233, 69, 96, 0.3);
+    flex-shrink: 0;
+}
+
+.user-avatar i {
+    font-size: 24px;
+    color: white;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.username {
+    color: var(--white);
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.timestamp {
+    color: var(--gray-400);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.timestamp i {
+    font-size: 12px;
+}
+
+.book-badge {
+    background: rgba(102, 126, 234, 0.15);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    color: #667eea;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.book-badge i {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.original-comment-body {
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.comment-text {
+    color: var(--gray-200);
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Reply Form Card */
+.reply-form-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+}
+
+.reply-form-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.reply-form-header i {
+    font-size: 24px;
+    color: var(--accent);
+}
+
+.reply-form-header h5 {
+    color: var(--white);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Form Custom */
+.form-group-custom {
+    margin-bottom: 24px;
+}
+
+.form-label-custom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--gray-300);
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.form-label-custom i {
+    color: var(--accent);
+    font-size: 16px;
+}
+
+.textarea-wrapper {
+    position: relative;
+}
+
+.textarea-wrapper textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: var(--white) !important;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    transition: all 0.3s ease;
+    font-family: var(--font-body);
+}
+
+.textarea-wrapper textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.1);
+}
+
+.textarea-wrapper textarea::placeholder {
+    color: var(--gray-500) !important;
+}
+
+/* Asegurar que el texto ingresado sea visible */
+#id_contenido {
+    color: var(--white) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+#id_contenido::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+#id_contenido:focus {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.1) !important;
+}
+
+/* Sobrescribir estilos de Bootstrap */
+.form-control,
+textarea.form-control {
+    color: var(--white) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.form-control::placeholder,
+textarea.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.form-control:focus,
+textarea.form-control:focus {
+    color: var(--white) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.1) !important;
+}
+
+.textarea-info {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.char-count {
+    color: var(--gray-400);
+    font-size: 12px;
+}
+
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #dc3545;
+    font-size: 13px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(220, 53, 69, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.error-message i {
+    font-size: 14px;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn-custom {
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-cancel {
+    background: rgba(108, 117, 125, 0.15);
+    color: var(--gray-300);
+    border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+.btn-cancel:hover {
+    background: rgba(108, 117, 125, 0.25);
+    color: var(--white);
+    transform: translateY(-2px);
+}
+
+.btn-submit {
+    background: var(--gradient-accent);
+    color: white;
+    box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+}
+
+/* Info Card */
+.info-card {
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.info-card i {
+    font-size: 20px;
+    color: #667eea;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.info-card p {
+    color: var(--gray-300);
+    font-size: 14px;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Animations */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .reply-section {
+        padding: 60px 0 40px;
+    }
+
+    .reply-title {
+        font-size: 26px;
+    }
+
+    .original-comment-card,
+    .reply-form-card {
+        padding: 20px;
+    }
+
+    .original-comment-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .book-badge {
+        max-width: 100%;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .btn-custom {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+
+<script>
+// Contador de caracteres
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.querySelector('textarea');
+    const charCount = document.getElementById('charCount');
+    
+    if (textarea && charCount) {
+        textarea.addEventListener('input', function() {
+            const length = this.value.length;
+            charCount.textContent = `${length} / 500 caracteres`;
+            
+            if (length > 450) {
+                charCount.style.color = '#dc3545';
+            } else if (length > 400) {
+                charCount.style.color = '#ffc107';
+            } else {
+                charCount.style.color = 'var(--gray-400)';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

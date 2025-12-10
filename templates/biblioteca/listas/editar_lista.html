@@ -1,0 +1,590 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Lista - Librería Digital{% endblock %}
+
+{% block content %}
+<section class="edit-list-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <!-- Header -->
+                <div class="edit-header" data-aos="fade-down">
+                    <div class="edit-icon">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <h2 class="edit-title">Editar lista: {{ lista.nombre }}</h2>
+                    <p class="edit-subtitle">Modifica los detalles de tu lista temática</p>
+                </div>
+                
+                <!-- Formulario -->
+                <div class="edit-card" data-aos="fade-up">
+                    <form method="POST" class="edit-form">
+                        {% csrf_token %}
+                        
+                        <!-- Nombre de la lista -->
+                        <div class="form-group-modern">
+                            <label for="{{ form.nombre.id_for_label }}" class="form-label-modern">
+                                <i class="bi bi-tag"></i>
+                                Nombre de la lista
+                            </label>
+                            {{ form.nombre }}
+                            {% if form.nombre.errors %}
+                                <div class="error-message-modern">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    {{ form.nombre.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Descripción -->
+                        <div class="form-group-modern">
+                            <label for="{{ form.descripcion.id_for_label }}" class="form-label-modern">
+                                <i class="bi bi-text-paragraph"></i>
+                                Descripción
+                            </label>
+                            {{ form.descripcion }}
+                            {% if form.descripcion.errors %}
+                                <div class="error-message-modern">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    {{ form.descripcion.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Selección de libros -->
+                        <div class="form-group-modern">
+                            <label for="{{ form.libros.id_for_label }}" class="form-label-modern">
+                                <i class="bi bi-book"></i>
+                                Selecciona libros
+                                <span class="books-count" id="selectedCount">({{ lista.libros.count }} seleccionado{{ lista.libros.count|pluralize }})</span>
+                            </label>
+                            <div class="books-selector">
+                                <select name="libros" id="id_libros" class="form-control" size="10" multiple="multiple">
+                                    {% for libro in form.libros.field.queryset %}
+                                    <option value="{{ libro.id }}" 
+                                            {% if libro in lista.libros.all %}selected class="initially-selected"{% endif %}
+                                            data-titulo="{{ libro.titulo }}" 
+                                            data-autor="{{ libro.autor }}">
+                                        {{ libro.titulo }} - {{ libro.autor }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% if form.libros.errors %}
+                                <div class="error-message-modern">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    {{ form.libros.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-hint-modern">
+                                <i class="bi bi-info-circle"></i>
+                                Haz clic en un libro para agregarlo/quitarlo. Los libros seleccionados aparecen con fondo degradado.
+                            </small>
+                        </div>
+                        
+                        <!-- Info Card -->
+                        <div class="info-card-modern">
+                            <i class="bi bi-lightbulb"></i>
+                            <div>
+                                <strong>Consejo:</strong> Puedes reorganizar el orden de los libros más tarde desde la vista de detalle de la lista.
+                            </div>
+                        </div>
+                        
+                        <!-- Botones de acción -->
+                        <div class="form-actions-modern">
+                            <a href="{% url 'detalle_lista' lista.id %}" class="btn-modern btn-cancel-modern">
+                                <i class="bi bi-x-circle"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn-modern btn-save-modern">
+                                <i class="bi bi-check-circle"></i>
+                                Guardar cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Sección de libros actuales (vista previa) -->
+                {% if lista.libros.exists %}
+                <div class="current-books-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="current-books-header">
+                        <i class="bi bi-collection"></i>
+                        <h5>Libros actuales en esta lista ({{ lista.libros.count }})</h5>
+                    </div>
+                    <div class="current-books-grid">
+                        {% for libro in lista.libros.all|slice:":6" %}
+                        <div class="mini-book-card">
+                            {% if libro.portada %}
+                            <img src="{{ libro.portada.url }}" alt="{{ libro.titulo }}" class="mini-book-cover">
+                            {% else %}
+                            <div class="mini-book-placeholder">
+                                <i class="bi bi-book"></i>
+                            </div>
+                            {% endif %}
+                            <span class="mini-book-title">{{ libro.titulo|truncatewords:3 }}</span>
+                        </div>
+                        {% endfor %}
+                        {% if lista.libros.count > 6 %}
+                        <div class="mini-book-card more-books">
+                            <div class="mini-book-placeholder">
+                                <i class="bi bi-plus-lg"></i>
+                            </div>
+                            <span class="mini-book-title">+{{ lista.libros.count|add:"-6" }} más</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectElement = document.getElementById('id_libros');
+    const countElement = document.getElementById('selectedCount');
+    
+    // Función para actualizar el contador
+    function updateCount() {
+        const selectedOptions = selectElement.querySelectorAll('option:checked');
+        const count = selectedOptions.length;
+        countElement.textContent = `(${count} seleccionado${count !== 1 ? 's' : ''})`;
+    }
+    
+    // Actualizar contador cuando cambia la selección
+    selectElement.addEventListener('change', updateCount);
+    
+    // Mejorar la UX: permitir clic simple para toggle
+    selectElement.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        const option = e.target;
+        if (option.tagName === 'OPTION') {
+            option.selected = !option.selected;
+            updateCount();
+            selectElement.focus();
+        }
+    });
+    
+    // Prevenir la deselección accidental al hacer clic fuera
+    selectElement.addEventListener('blur', function() {
+        // Mantener las selecciones
+    });
+});
+</script>
+
+<style>
+/* ============================================
+   EDITAR LISTA - DISEÑO PROFESIONAL
+   ============================================ */
+
+.edit-list-section {
+    min-height: 100vh;
+    padding: 100px 0 60px;
+    background: var(--primary-dark);
+}
+
+/* Header */
+.edit-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.edit-icon {
+    width: 70px;
+    height: 70px;
+    background: var(--gradient-accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    box-shadow: 0 10px 30px rgba(233, 69, 96, 0.3);
+    animation: float 3s ease-in-out infinite;
+}
+
+.edit-icon i {
+    font-size: 32px;
+    color: white;
+}
+
+.edit-title {
+    font-family: var(--font-heading);
+    font-size: 32px;
+    color: var(--white);
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.edit-subtitle {
+    color: var(--gray-400);
+    font-size: 16px;
+    margin: 0;
+}
+
+/* Card principal */
+.edit-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+}
+
+.edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Form Groups */
+.form-group-modern {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label-modern {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--gray-300);
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.form-label-modern i {
+    color: var(--accent);
+    font-size: 16px;
+}
+
+.books-count {
+    color: var(--gray-500);
+    font-size: 13px;
+    font-weight: 400;
+    margin-left: 4px;
+}
+
+/* Inputs y Textareas */
+.form-group-modern input,
+.form-group-modern textarea {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px;
+    color: var(--white) !important;
+    font-size: 15px;
+    line-height: 1.6;
+    transition: all 0.3s ease;
+    font-family: var(--font-body);
+}
+
+.form-group-modern textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-group-modern input:focus,
+.form-group-modern textarea:focus {
+    outline: none;
+    border-color: var(--accent) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.1) !important;
+}
+
+.form-group-modern input::placeholder,
+.form-group-modern textarea::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Selector de libros mejorado */
+.books-selector select {
+    width: 100%;
+    min-height: 250px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px;
+    color: var(--white) !important;
+    font-size: 14px;
+    font-family: var(--font-body);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.books-selector select:focus {
+    outline: none;
+    border-color: var(--accent) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.1) !important;
+}
+
+.books-selector select option {
+    padding: 12px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--gray-300);
+    border-radius: 6px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.books-selector select option:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--white);
+}
+
+.books-selector select option:checked,
+.books-selector select option.initially-selected:checked {
+    background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%) !important;
+    color: white !important;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(233, 69, 96, 0.3);
+}
+
+.books-selector select option.initially-selected {
+    background: linear-gradient(135deg, rgba(233, 69, 96, 0.2) 0%, rgba(255, 107, 107, 0.2) 100%);
+    color: var(--white);
+    font-weight: 500;
+}
+
+/* Form hint */
+.form-hint-modern {
+    color: var(--gray-500);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.form-hint-modern i {
+    font-size: 14px;
+}
+
+/* Error messages */
+.error-message-modern {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #dc3545;
+    font-size: 13px;
+    padding: 8px 12px;
+    background: rgba(220, 53, 69, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.error-message-modern i {
+    font-size: 14px;
+}
+
+/* Info Card */
+.info-card-modern {
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.info-card-modern i {
+    font-size: 20px;
+    color: #667eea;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.info-card-modern strong {
+    color: var(--white);
+}
+
+.info-card-modern div {
+    color: var(--gray-300);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Botones de acción */
+.form-actions-modern {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.btn-modern {
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-cancel-modern {
+    background: rgba(108, 117, 125, 0.15);
+    color: var(--gray-300);
+    border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+.btn-cancel-modern:hover {
+    background: rgba(108, 117, 125, 0.25);
+    color: var(--white);
+    transform: translateY(-2px);
+}
+
+.btn-save-modern {
+    background: var(--gradient-accent);
+    color: white;
+    box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+}
+
+.btn-save-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+}
+
+/* Libros actuales - Vista previa */
+.current-books-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.current-books-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.current-books-header i {
+    font-size: 24px;
+    color: var(--accent);
+}
+
+.current-books-header h5 {
+    color: var(--white);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.current-books-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 16px;
+}
+
+.mini-book-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.mini-book-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-4px);
+}
+
+.mini-book-cover {
+    width: 60px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.mini-book-placeholder {
+    width: 60px;
+    height: 90px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-500);
+    font-size: 24px;
+}
+
+.mini-book-title {
+    font-size: 11px;
+    color: var(--gray-300);
+    text-align: center;
+    line-height: 1.3;
+}
+
+.more-books {
+    opacity: 0.7;
+}
+
+.more-books .mini-book-placeholder {
+    background: rgba(233, 69, 96, 0.15);
+    border: 2px dashed var(--accent);
+}
+
+.more-books .mini-book-title {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* Animación */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .edit-list-section {
+        padding: 80px 0 40px;
+    }
+
+    .edit-title {
+        font-size: 26px;
+    }
+
+    .edit-card,
+    .current-books-card {
+        padding: 20px;
+    }
+
+    .form-actions-modern {
+        flex-direction: column-reverse;
+    }
+
+    .btn-modern {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .current-books-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+</style>
+{% endblock %}

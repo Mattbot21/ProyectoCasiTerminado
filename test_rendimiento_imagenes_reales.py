@@ -14,6 +14,9 @@ from PIL import Image
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import urllib.request
 from urllib.error import URLError
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+import hashlib
 
 # Configurar Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'LibreriaDigital.settings')
@@ -461,12 +464,47 @@ COLORES = [
     (40, 167, 69),    # Verde
 ]
 
-def descargar_portada(url, nombre_archivo):
-    """Descarga una portada desde URL y la retorna como InMemoryUploadedFile"""
+# Configuración de optimización
+CONFIG = {
+    'max_workers': 10,           # Descargas paralelas simultáneas
+    'timeout': 15,               # Timeout para descargas (segundos)
+    'max_retries': 3,            # Reintentos por imagen
+    'cache_enabled': True,       # Activar caché de imágenes
+    'cache_dir': 'media/cache_portadas',  # Directorio de caché
+    'show_progress': True,       # Mostrar barra de progreso
+}
+
+def get_cache_path(url):
+    """Genera ruta de caché basada en hash de URL"""
+    url_hash = hashlib.md5(url.encode()).hexdigest()
+    cache_dir = Path(CONFIG['cache_dir'])
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    return cache_dir / f"{url_hash}.jpg"
+
+def descargar_portada(url, nombre_archivo, intentos=0):
+    """Descarga una portada desde URL con reintentos y caché"""
+    # Verificar caché primero
+    if CONFIG['cache_enabled']:
+        cache_path = get_cache_path(url)
+        if cache_path.exists():
+            try:
+                with open(cache_path, 'rb') as f:
+                    buffer = BytesIO(f.read())
+                return InMemoryUploadedFile(
+                    buffer,
+                    None,
+                    nombre_archivo,
+                    'image/jpeg',
+                    buffer.getbuffer().nbytes,
+                    None
+                )
+            except Exception:
+                pass  # Si hay error leyendo caché, descargar de nuevo
+    
     try:
         # Descargar la imagen
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=CONFIG['timeout']) as response:
             imagen_data = response.read()
         
         # Abrir con PIL y convertir si es necesario
@@ -483,6 +521,16 @@ def descargar_portada(url, nombre_archivo):
         img.save(buffer, format='JPEG', quality=85)
         buffer.seek(0)
         
+        # Guardar en caché si está activado
+        if CONFIG['cache_enabled']:
+            try:
+                cache_path = get_cache_path(url)
+                with open(cache_path, 'wb') as f:
+                    f.write(buffer.getvalue())
+                buffer.seek(0)  # Resetear posición
+            except Exception:
+                pass  # Continuar aunque falle guardar caché
+        
         return InMemoryUploadedFile(
             buffer,
             None,
@@ -492,7 +540,10 @@ def descargar_portada(url, nombre_archivo):
             None
         )
     except Exception as e:
-        print(f"   ⚠ Error descargando {nombre_archivo}: {str(e)[:50]}")
+        # Reintentar si no se alcanzó el máximo
+        if intentos < CONFIG['max_retries']:
+            time.sleep(1)  # Esperar 1 segundo antes de reintentar
+            return descargar_portada(url, nombre_archivo, intentos + 1)
         return None
 
 def generar_imagen_portada(width=400, height=600, color_index=0):
@@ -541,20 +592,71 @@ def crear_usuarios(cantidad=200):
     print(f"   ✓ Usuarios creados en {elapsed_time:.2f} ms")
     return elapsed_time
 
+def descargar_portada_worker(libro_data, index):
+    """Worker para descarga paralela de portadas"""
+    portada = descargar_portada(
+        libro_data['url_portada'], 
+        f"{libro_data['titulo'][:30]}.jpg"
+    )
+    return (index, portada, libro_data)
+
+def mostrar_progreso(completados, total, exitosos, fallidos):
+    """Muestra barra de progreso visual"""
+    porcentaje = (completados / total) * 100
+    barra_length = 40
+    bloques_llenos = int((completados / total) * barra_length)
+    barra = '█' * bloques_llenos + '░' * (barra_length - bloques_llenos)
+    print(f"\r   [{barra}] {porcentaje:.1f}% ({completados}/{total}) - ✓{exitosos} ✗{fallidos}", end='', flush=True)
+
 def crear_libros_con_imagenes_reales(cantidad=100):
-    """Crear libros con portadas REALES descargadas"""
+    """Crear libros con portadas REALES descargadas (OPTIMIZADO)"""
     print(f"\n2. Creando {cantidad} libros con PORTADAS REALES descargadas...")
-    print(f"   ⚠️ ADVERTENCIA: Esto puede tardar varios minutos")
+    print(f"   🚀 Descarga PARALELA con {CONFIG['max_workers']} workers")
     start_time = time.time()
     
-    libros_creados = 0
+    cantidad = min(cantidad, len(LIBROS_REALES))
+    libros_data = LIBROS_REALES[:cantidad]
+    
+    # Descargar todas las portadas en paralelo
+    portadas_descargadas = {}
     descargas_exitosas = 0
     descargas_fallidas = 0
     
-    for i in range(min(cantidad, len(LIBROS_REALES))):
-        libro_data = LIBROS_REALES[i]
+    if CONFIG['show_progress']:
+        print(f"   Descargando {cantidad} portadas...")
+    
+    with ThreadPoolExecutor(max_workers=CONFIG['max_workers']) as executor:
+        # Enviar todas las tareas
+        futures = {
+            executor.submit(descargar_portada_worker, libro_data, i): i 
+            for i, libro_data in enumerate(libros_data)
+        }
         
-        # Crear libro
+        # Procesar resultados a medida que se completen
+        completados = 0
+        for future in as_completed(futures):
+            index, portada, libro_data = future.result()
+            portadas_descargadas[index] = (portada, libro_data)
+            
+            if portada:
+                descargas_exitosas += 1
+            else:
+                descargas_fallidas += 1
+            
+            completados += 1
+            if CONFIG['show_progress']:
+                mostrar_progreso(completados, cantidad, descargas_exitosas, descargas_fallidas)
+    
+    if CONFIG['show_progress']:
+        print()  # Nueva línea después de la barra de progreso
+    
+    # Crear libros en la base de datos
+    print(f"   Guardando libros en la base de datos...")
+    libros_creados = 0
+    
+    for i in range(cantidad):
+        portada, libro_data = portadas_descargadas[i]
+        
         libro = Libro(
             titulo=libro_data['titulo'],
             autor=libro_data['autor'],
@@ -562,39 +664,30 @@ def crear_libros_con_imagenes_reales(cantidad=100):
             descripcion=libro_data['descripcion']
         )
         
-        # Intentar descargar portada real
-        print(f"   [{i+1}/{cantidad}] Descargando: {libro_data['titulo'][:40]}...")
-        portada = descargar_portada(libro_data['url_portada'], f"{libro_data['titulo'][:30]}.jpg")
-        
+        # Usar portada descargada o fallback
         if portada:
             libro.portada = portada
-            descargas_exitosas += 1
-            print(f"   ✓ Descargada correctamente")
         else:
-            # Fallback a color
             libro.portada = generar_imagen_portada(color_index=i % 6)
-            descargas_fallidas += 1
-            print(f"   ✗ Usando color de respaldo")
         
         libro.save()
         libros_creados += 1
-        
-        # Pausa pequeña para no saturar el servidor
-        time.sleep(0.5)
     
     elapsed_time = (time.time() - start_time) * 1000
     print(f"\n   ✓ {libros_creados} libros creados en {elapsed_time/1000:.1f} segundos")
     print(f"   ✓ {descargas_exitosas} portadas reales descargadas")
     print(f"   ✗ {descargas_fallidas} con portadas de colores (fallback)")
+    if CONFIG['cache_enabled']:
+        print(f"   💾 Caché habilitado en: {CONFIG['cache_dir']}")
     return elapsed_time
 
 def crear_reseñas(cantidad=300):
-    """Crear reseñas de prueba"""
+    """Crear reseñas de prueba (OPTIMIZADO)"""
     print(f"\n3. Creando {cantidad} reseñas...")
     start_time = time.time()
     
-    usuarios = list(Usuario.objects.filter(rol='usuario')[:200])
-    libros = list(Libro.objects.all())
+    usuarios = list(Usuario.objects.filter(rol='usuario').only('id', 'username')[:200])
+    libros = list(Libro.objects.only('id', 'titulo').all())
     
     if not usuarios or not libros:
         print(f"   ⚠ No hay suficientes datos. Saltando...")
@@ -1199,13 +1292,13 @@ def mostrar_resumen(tiempos_creacion, resultados_consultas):
 def main():
     """Función principal"""
     print("\n" + "="*70)
-    print(" SCRIPT DE PRUEBAS CON IMÁGENES REALES DE PORTADAS")
+    print(" SCRIPT DE PRUEBAS CON IMÁGENES REALES DE PORTADAS (OPTIMIZADO)")
     print(" Librería Digital - Proyecto Integrado INACAP")
     print("="*70)
     print("\n Este script creará:")
     print("   • 200 usuarios (180 usuarios + 20 admins)")
     print("   • 10 categorías")
-    print("   • 100 libros con PORTADAS REALES descargadas (5-10 min)")
+    print("   • 100 libros con PORTADAS REALES descargadas")
     print("   • 300 reseñas")
     print("   • 100 favoritos")
     print("   • 100 registros de historial")
@@ -1217,7 +1310,12 @@ def main():
     print("   • 30 reportes de moderación")
     print("   • 20 acciones de moderación")
     print("\n Total: ~1560 registros con PORTADAS REALES")
-    print(" ⚠️  ADVERTENCIA: Descarga de imágenes tarda varios minutos")
+    print("\n 🚀 OPTIMIZACIONES ACTIVAS:")
+    print(f"   • Descarga paralela: {CONFIG['max_workers']} workers simultáneos")
+    print(f"   • Caché: {'✓ Activado' if CONFIG['cache_enabled'] else '✗ Desactivado'}")
+    print(f"   • Reintentos: {CONFIG['max_retries']} por imagen")
+    print(f"   • Timeout: {CONFIG['timeout']}s por descarga")
+    print(f"\n   Tiempo estimado: 1-2 minutos (vs 5-10 min sin optimizar)")
     print("="*70)
     
     # Confirmar ejecución

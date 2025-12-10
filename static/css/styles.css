@@ -3823,3 +3823,485 @@ img {
   }
 }
 
+/* ============================================
+   PANEL DE MODERACIÓN - TABLA MEJORADA
+   ============================================ */
+
+.moderation-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 12px;
+}
+
+.moderation-table thead th {
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--gray-400);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.moderation-table thead th:first-child {
+  border-radius: 12px 0 0 12px;
+  padding-left: 24px;
+}
+
+.moderation-table thead th:last-child {
+  border-radius: 0 12px 12px 0;
+  text-align: center;
+  padding-right: 24px;
+}
+
+.moderation-table tbody tr {
+  background: rgba(255, 255, 255, 0.02);
+  transition: all 0.3s ease;
+  border-radius: 12px;
+}
+
+.moderation-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.moderation-table tbody td {
+  padding: 20px;
+  border: none;
+  vertical-align: middle;
+  color: var(--gray-300);
+}
+
+.moderation-table tbody td:first-child {
+  border-radius: 12px 0 0 12px;
+  padding-left: 24px;
+}
+
+.moderation-table tbody td:last-child {
+  border-radius: 0 12px 12px 0;
+  text-align: center;
+  padding-right: 24px;
+}
+
+/* User Cell con Avatar Mejorado */
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 150px;
+}
+
+.user-avatar-sm {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--gradient-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(233, 69, 96, 0.3);
+}
+
+.user-avatar-sm i {
+  color: white;
+  font-size: 18px;
+}
+
+.user-cell span {
+  font-weight: 500;
+  color: var(--white);
+  white-space: nowrap;
+}
+
+/* Motivo Badges Mejorados */
+.motivo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.motivo-badge::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.motivo-badge.spam {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.motivo-badge.spam::before {
+  background: #ffc107;
+  box-shadow: 0 0 10px #ffc107;
+}
+
+.motivo-badge.inapropiado,
+.motivo-badge.contenido_inapropiado {
+  background: rgba(233, 69, 96, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(233, 69, 96, 0.3);
+}
+
+.motivo-badge.inapropiado::before,
+.motivo-badge.contenido_inapropiado::before {
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+
+.motivo-badge.otro {
+  background: rgba(108, 117, 125, 0.15);
+  color: var(--gray-400);
+  border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+.motivo-badge.otro::before {
+  background: var(--gray-400);
+  box-shadow: 0 0 10px var(--gray-400);
+}
+
+/* Tipo Badges Mejorados */
+.tipo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tipo-badge.reseña {
+  background: rgba(255, 165, 0, 0.15);
+  color: #ffa500;
+  border: 1px solid rgba(255, 165, 0, 0.3);
+}
+
+.tipo-badge.comentario {
+  background: rgba(0, 123, 255, 0.15);
+  color: #007bff;
+  border: 1px solid rgba(0, 123, 255, 0.3);
+}
+
+/* Botón Revisar Mejorado */
+.btn-action {
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.btn-review {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-review:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  color: white;
+}
+
+.btn-review i {
+  font-size: 16px;
+}
+
+/* Action Badge (para reportes resueltos) */
+.action-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.action-badge i {
+  font-size: 14px;
+}
+
+.action-badge.eliminar {
+  background: rgba(220, 53, 69, 0.15);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.action-badge.advertencia {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.action-badge.ignorar {
+  background: rgba(108, 117, 125, 0.15);
+  color: var(--gray-400);
+  border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+/* Responsive Table */
+@media (max-width: 1200px) {
+  .moderation-table {
+    font-size: 13px;
+  }
+  
+  .moderation-table thead th,
+  .moderation-table tbody td {
+    padding: 14px 16px;
+  }
+  
+  .user-cell {
+    min-width: 120px;
+  }
+  
+  .user-avatar-sm {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .user-avatar-sm i {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .moderation-table {
+    min-width: 700px;
+  }
+  
+  .btn-action {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
+
+/* Animación Pulse para los indicadores */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+/* ============================================
+   SECCIÓN DE COMENTARIOS - MEJORADA
+   ============================================ */
+
+.comments-section {
+  margin-top: 24px;
+}
+
+.comments-header {
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
+}
+
+.comments-header h6 {
+  color: var(--white);
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comments-header h6 i {
+  color: var(--accent);
+  font-size: 18px;
+}
+
+.comments-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* Scrollbar personalizado para comentarios */
+.comments-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.comments-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 10px;
+}
+
+.comments-list::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-hover);
+}
+
+/* Comentario Principal Mejorado */
+.comment-item {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  margin-bottom: 12px !important;
+  transition: all 0.3s ease;
+}
+
+.comment-item:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(233, 69, 96, 0.3) !important;
+  transform: translateX(4px);
+}
+
+.comment-item strong {
+  color: var(--white) !important;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.comment-item .text-muted,
+.comment-item small.text-muted {
+  color: var(--gray-400) !important;
+  font-size: 12px;
+}
+
+.comment-item p {
+  color: var(--gray-300) !important;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+/* Respuestas Anidadas Mejoradas */
+.comment-item .comment-item {
+  background: rgba(233, 69, 96, 0.08) !important;
+  border: none !important;
+  border-left: 3px solid var(--accent) !important;
+  padding: 12px !important;
+  margin-bottom: 8px !important;
+  margin-top: 8px !important;
+  border-radius: 8px !important;
+}
+
+.comment-item .comment-item:hover {
+  background: rgba(233, 69, 96, 0.15) !important;
+  border-left-color: var(--accent-hover) !important;
+}
+
+.comment-item .comment-item strong {
+  color: var(--accent) !important;
+  font-size: 13px;
+}
+
+.comment-item .comment-item p {
+  color: var(--gray-200) !important;
+  font-size: 13px;
+}
+
+/* Botones de Acción de Comentarios */
+.comment-item .btn-group .btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--gray-300);
+  padding: 4px 8px;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.comment-item .btn-outline-warning {
+  border-color: rgba(255, 193, 7, 0.3);
+  color: #ffc107;
+}
+
+.comment-item .btn-outline-warning:hover {
+  background: rgba(255, 193, 7, 0.15);
+  border-color: #ffc107;
+  color: #ffc107;
+}
+
+.comment-item .btn-outline-danger {
+  border-color: rgba(220, 53, 69, 0.3);
+  color: #dc3545;
+}
+
+.comment-item .btn-outline-danger:hover {
+  background: rgba(220, 53, 69, 0.15);
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.comment-item .btn-outline-primary {
+  border-color: rgba(102, 126, 234, 0.3);
+  color: #667eea;
+}
+
+.comment-item .btn-outline-primary:hover {
+  background: rgba(102, 126, 234, 0.15);
+  border-color: #667eea;
+  color: #667eea;
+}
+
+/* Estado vacío de comentarios */
+.comments-section p.text-muted {
+  color: var(--gray-400) !important;
+  font-size: 14px;
+  padding: 20px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.comments-section p.text-muted i {
+  color: var(--accent);
+  margin-right: 6px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .comment-item {
+    padding: 12px !important;
+  }
+  
+  .comment-item .comment-item {
+    margin-left: 8px !important;
+    padding: 10px !important;
+  }
+  
+  .comments-list {
+    max-height: 300px;
+  }
+}
+

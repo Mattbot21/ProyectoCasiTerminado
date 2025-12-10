@@ -37,9 +37,15 @@ def limpiar_datos():
     print("   • Categorías")
     print("   • Usuarios de prueba (opcional)")
     
-    respuesta = input("\n⚠️  ¿Está SEGURO de eliminar TODOS los datos? (s/n): ")
-    if respuesta.lower() != 's':
-        print("\nOperación cancelada.")
+    respuesta = input("\n⚠️  ¿Está SEGURO de eliminar TODOS los datos? (escriba 'SI' en mayúsculas): ")
+    if respuesta != 'SI':
+        print("\n❌ Operación cancelada.")
+        return
+    
+    # Confirmación adicional
+    confirmacion = input("\n⚠️  Escriba 'ELIMINAR' para confirmar: ")
+    if confirmacion != 'ELIMINAR':
+        print("\n❌ Operación cancelada.")
         return
     
     print("\nEliminando datos en orden correcto...")
@@ -90,16 +96,37 @@ def limpiar_datos():
     
     # Fase 5: Libros y categorías
     print("\n11. Eliminando libros (y portadas)...")
+    # Obtener todos los libros antes de eliminarlos para borrar archivos
+    libros = list(Libro.objects.all())
+    portadas_eliminadas = 0
+    errores_portadas = 0
+    
+    for libro in libros:
+        if libro.portada:
+            try:
+                # Verificar si el archivo existe antes de intentar eliminarlo
+                ruta_completa = libro.portada.path
+                if os.path.exists(ruta_completa):
+                    os.remove(ruta_completa)
+                    portadas_eliminadas += 1
+                    print(f"   🗑️  Portada eliminada: {os.path.basename(ruta_completa)}")
+            except Exception as e:
+                errores_portadas += 1
+                print(f"   ⚠️  Error al eliminar portada de '{libro.titulo}': {e}")
+    
     count = Libro.objects.all().delete()[0]
     print(f"   ✓ {count} libros eliminados")
+    print(f"   ✓ {portadas_eliminadas} archivos de portadas eliminados")
+    if errores_portadas > 0:
+        print(f"   ⚠️  {errores_portadas} portadas no se pudieron eliminar")
     
     print("\n12. Eliminando categorías...")
     count = Categoria.objects.all().delete()[0]
     print(f"   ✓ {count} categorías eliminadas")
     
     # Fase 6: Usuarios (opcional)
-    respuesta = input("\n¿Eliminar también TODOS los usuarios? (s/n): ")
-    if respuesta.lower() == 's':
+    respuesta = input("\n¿Eliminar también TODOS los usuarios? (escriba 'SI' para confirmar): ")
+    if respuesta == 'SI':
         print("\n13. Eliminando usuarios...")
         count = Usuario.objects.all().delete()[0]
         print(f"   ✓ {count} usuarios eliminados")
@@ -107,9 +134,9 @@ def limpiar_datos():
         # Solo eliminar usuarios de prueba (los que tienen username usuarioXXX)
         print("\n13. Eliminando solo usuarios de prueba...")
         count = Usuario.objects.filter(username__startswith='usuario').delete()[0]
-        count2 = Usuario.objects.filter(username__startswith='admin').delete()[0]
+        count2 = Usuario.objects.filter(username__startswith='admin').exclude(username='admin').delete()[0]
         print(f"   ✓ {count + count2} usuarios de prueba eliminados")
-        print(f"   ℹ Usuarios reales preservados")
+        print(f"   ℹ  Usuarios reales preservados (incluido 'admin' principal)")
     
     print("\n" + "="*70)
     print(" ✓ LIMPIEZA COMPLETADA")

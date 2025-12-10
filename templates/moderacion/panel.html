@@ -15,47 +15,108 @@
             <p class="moderation-subtitle">Gestiona los reportes y mantén la comunidad segura</p>
         </div>
         
-        <!-- Stats Cards -->
+        <!-- Stats Cards - MEJORADAS -->
         <div class="row g-4 mb-5">
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
                 <div class="stat-card pending">
                     <div class="stat-card-icon">
                         <i class="bi bi-clock-history"></i>
                     </div>
                     <div class="stat-card-info">
-                        <h3>{{ reportes_pendientes|length }}</h3>
+                        <h3>{{ stats.total_pendientes }}</h3>
                         <p>Reportes Pendientes</p>
+                        <small class="text-muted">
+                            <i class="bi bi-chat-text me-1"></i>{{ stats.comentarios_reportados }} comentarios
+                            <i class="bi bi-star ms-2 me-1"></i>{{ stats.reseñas_reportadas }} reseñas
+                        </small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="150">
+            <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="150">
                 <div class="stat-card resolved">
                     <div class="stat-card-icon">
                         <i class="bi bi-check-circle"></i>
                     </div>
                     <div class="stat-card-info">
-                        <h3>{{ reportes_resueltos|length }}</h3>
+                        <h3>{{ stats.total_resueltos }}</h3>
                         <p>Reportes Resueltos</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
-                <div class="stat-card total">
+            <div class="col-lg-2 col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="stat-card spam">
                     <div class="stat-card-icon">
-                        <i class="bi bi-flag"></i>
+                        <i class="bi bi-envelope-x"></i>
                     </div>
                     <div class="stat-card-info">
-                        <h3>{{ reportes_pendientes|length|add:reportes_resueltos|length }}</h3>
-                        <p>Total de Reportes</p>
+                        <h3>{{ stats.spam_pendiente }}</h3>
+                        <p>Spam</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4" data-aos="fade-up" data-aos-delay="250">
+                <div class="stat-card inappropriate">
+                    <div class="stat-card-icon">
+                        <i class="bi bi-slash-circle"></i>
+                    </div>
+                    <div class="stat-card-info">
+                        <h3>{{ stats.inapropiado_pendiente }}</h3>
+                        <p>Inapropiado</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="stat-card other">
+                    <div class="stat-card-icon">
+                        <i class="bi bi-three-dots"></i>
+                    </div>
+                    <div class="stat-card-info">
+                        <h3>{{ stats.otro_pendiente }}</h3>
+                        <p>Otro</p>
                     </div>
                 </div>
             </div>
         </div>
         
+        <!-- FILTROS -->
+        <div class="filters-card mb-4" data-aos="fade-up">
+            <form method="GET" class="filters-form">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label for="motivo" class="form-label">Filtrar por motivo</label>
+                        <select name="motivo" id="motivo" class="form-select">
+                            <option value="">Todos los motivos</option>
+                            <option value="spam" {% if motivo_filtro == 'spam' %}selected{% endif %}>Spam</option>
+                            <option value="inapropiado" {% if motivo_filtro == 'inapropiado' %}selected{% endif %}>Contenido inapropiado</option>
+                            <option value="otro" {% if motivo_filtro == 'otro' %}selected{% endif %}>Otro</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="tipo" class="form-label">Filtrar por tipo</label>
+                        <select name="tipo" id="tipo" class="form-select">
+                            <option value="">Todos los tipos</option>
+                            <option value="reseña" {% if tipo_filtro == 'reseña' %}selected{% endif %}>Reseñas</option>
+                            <option value="comentario" {% if tipo_filtro == 'comentario' %}selected{% endif %}>Comentarios</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-funnel me-1"></i>Aplicar Filtros
+                        </button>
+                        <a href="{% url 'panel_moderacion' %}" class="btn btn-outline-secondary w-100 mt-2">
+                            <i class="bi bi-x-circle me-1"></i>Limpiar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
         <!-- Pending Reports -->
         <div class="moderation-card" data-aos="fade-up">
             <div class="moderation-card-header pending">
-                <h3><i class="bi bi-exclamation-circle me-2"></i>Reportes Pendientes</h3>
+                <h3><i class="bi bi-exclamation-circle me-2"></i>Reportes Pendientes 
+                    <span class="badge bg-danger ms-2">{{ stats.total_pendientes }}</span>
+                </h3>
             </div>
             <div class="moderation-card-body">
                 {% if reportes_pendientes %}
@@ -63,10 +124,11 @@
                     <table class="moderation-table">
                         <thead>
                             <tr>
-                                <th>Usuario</th>
-                                <th>Motivo</th>
-                                <th>Fecha</th>
-                                <th>Acciones</th>
+                                <th style="width: 20%;">Usuario</th>
+                                <th style="width: 22%;">Motivo</th>
+                                <th style="width: 18%;">Tipo</th>
+                                <th style="width: 20%;">Fecha</th>
+                                <th style="width: 20%;">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -81,14 +143,42 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="motivo-badge {{ reporte.motivo }}">
-                                        {{ reporte.get_motivo_display }}
+                                    {% if reporte.motivo == 'spam' %}
+                                        <span class="motivo-badge spam">
+                                            <i class="bi bi-envelope-x"></i>
+                                            Spam
+                                        </span>
+                                    {% elif reporte.motivo == 'inapropiado' or reporte.motivo == 'contenido_inapropiado' %}
+                                        <span class="motivo-badge contenido_inapropiado">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                            Contenido Inapropiado
+                                        </span>
+                                    {% else %}
+                                        <span class="motivo-badge otro">
+                                            <i class="bi bi-three-dots"></i>
+                                            Otro
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if reporte.reseña %}
+                                        <span class="tipo-badge reseña">
+                                            <i class="bi bi-star-fill"></i>Reseña
+                                        </span>
+                                    {% else %}
+                                        <span class="tipo-badge comentario">
+                                            <i class="bi bi-chat-text-fill"></i>Comentario
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span style="color: var(--gray-400); font-size: 14px;">
+                                        {{ reporte.fecha|date:"d/m/Y H:i" }}
                                     </span>
                                 </td>
-                                <td>{{ reporte.fecha|date:"d/m/Y H:i" }}</td>
                                 <td>
-                                    <a href="{% url 'resolver_reporte' reporte.id %}" class="btn btn-action btn-review">
-                                        <i class="bi bi-search me-1"></i>Revisar
+                                    <a href="{% url 'resolver_reporte' reporte.id %}" class="btn-action btn-review">
+                                        <i class="bi bi-search"></i>Revisar
                                     </a>
                                 </td>
                             </tr>
@@ -96,6 +186,55 @@
                         </tbody>
                     </table>
                 </div>
+                
+                <!-- PAGINACIÓN PENDIENTES -->
+                {% if reportes_pendientes.has_other_pages %}
+                <div class="pagination-wrapper">
+                    <nav aria-label="Navegación de reportes pendientes">
+                        <ul class="pagination pagination-custom">
+                            {% if reportes_pendientes.has_previous %}
+                            <li class="page-item-custom">
+                                <a class="page-link-custom" href="?page_pendientes=1{% if motivo_filtro %}&motivo={{ motivo_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}">
+                                    <i class="bi bi-chevron-bar-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item-custom">
+                                <a class="page-link-custom" href="?page_pendientes={{ reportes_pendientes.previous_page_number }}{% if motivo_filtro %}&motivo={{ motivo_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            <li class="page-item-custom active">
+                                <span class="page-link-custom">{{ reportes_pendientes.number }}</span>
+                            </li>
+                            
+                            {% if reportes_pendientes.has_next %}
+                            <li class="page-item-custom">
+                                <a class="page-link-custom" href="?page_pendientes={{ reportes_pendientes.next_page_number }}{% if motivo_filtro %}&motivo={{ motivo_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item-custom">
+                                <a class="page-link-custom" href="?page_pendientes={{ reportes_pendientes.paginator.num_pages }}{% if motivo_filtro %}&motivo={{ motivo_filtro }}{% endif %}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}">
+                                    <i class="bi bi-chevron-bar-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    <div class="pagination-info">
+                        <span class="info-text">Mostrando</span>
+                        <span class="info-number">{{ reportes_pendientes.start_index }}</span>
+                        <span class="info-separator">-</span>
+                        <span class="info-number">{{ reportes_pendientes.end_index }}</span>
+                        <span class="info-text">de</span>
+                        <span class="info-number">{{ reportes_pendientes.paginator.count }}</span>
+                        <span class="info-text">reportes pendientes</span>
+                    </div>
+                </div>
+                {% endif %}
+                
                 {% else %}
                 <div class="empty-state">
                     <i class="bi bi-check-circle empty-state-icon success"></i>
@@ -117,10 +256,10 @@
                     <table class="moderation-table">
                         <thead>
                             <tr>
-                                <th>Usuario</th>
-                                <th>Motivo</th>
-                                <th>Fecha</th>
-                                <th>Acción aplicada</th>
+                                <th style="width: 22%;">Usuario</th>
+                                <th style="width: 26%;">Motivo</th>
+                                <th style="width: 22%;">Fecha</th>
+                                <th style="width: 30%;">Acción aplicada</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -135,14 +274,38 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="motivo-badge {{ reporte.motivo }}">
-                                        {{ reporte.get_motivo_display }}
+                                    {% if reporte.motivo == 'spam' %}
+                                        <span class="motivo-badge spam">
+                                            <i class="bi bi-envelope-x"></i>
+                                            Spam
+                                        </span>
+                                    {% elif reporte.motivo == 'inapropiado' or reporte.motivo == 'contenido_inapropiado' %}
+                                        <span class="motivo-badge contenido_inapropiado">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                            Contenido Inapropiado
+                                        </span>
+                                    {% else %}
+                                        <span class="motivo-badge otro">
+                                            <i class="bi bi-three-dots"></i>
+                                            Otro
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span style="color: var(--gray-400); font-size: 14px;">
+                                        {{ reporte.fecha|date:"d/m/Y H:i" }}
                                     </span>
                                 </td>
-                                <td>{{ reporte.fecha|date:"d/m/Y H:i" }}</td>
                                 <td>
                                     {% if reporte.acciones.last %}
                                     <span class="action-badge {{ reporte.acciones.last.accion }}">
+                                        {% if reporte.acciones.last.accion == 'eliminar' %}
+                                            <i class="bi bi-trash"></i>
+                                        {% elif reporte.acciones.last.accion == 'advertencia' %}
+                                            <i class="bi bi-exclamation-circle"></i>
+                                        {% else %}
+                                            <i class="bi bi-x-circle"></i>
+                                        {% endif %}
                                         {{ reporte.acciones.last.get_accion_display }}
                                     </span>
                                     {% else %}

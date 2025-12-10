@@ -137,7 +137,7 @@
                         </div>
                         
                         {% if reseña.comentarios.all %}
-                        <div class="comments-list" style="max-height: 400px; overflow-y: auto;">
+                        <div class="comments-list">
                             {% for comentario in reseña.comentarios.all %}
                                 {% if not comentario.padre %}
                                 <!-- Comentario principal -->
@@ -173,34 +173,48 @@
                                     
                                     <!-- Respuestas anidadas (H16) -->
                                     {% if comentario.respuestas.exists %}
-                                        <div class="ms-4 mt-2">
-                                            {% for respuesta in comentario.respuestas.all %}
-                                                <div class="comment-item p-2 mb-2 border-start border-primary border-3 bg-white">
-                                                    <div class="d-flex justify-content-between align-items-start mb-1">
-                                                        <div>
-                                                            <strong class="small">{{ respuesta.usuario.username }}</strong>
-                                                            <small class="text-muted ms-1" style="font-size: 0.75rem;">{{ respuesta.fecha|date:"d/m/Y H:i" }}</small>
+                                        <div class="replies-container ms-4 mt-2">
+                                            <button class="btn-toggle-replies" onclick="toggleReplies(this)" type="button">
+                                                <i class="bi bi-chevron-down"></i>
+                                                <span class="replies-count">{{ comentario.respuestas.count }} respuesta{{ comentario.respuestas.count|pluralize }}</span>
+                                            </button>
+                                            <div class="replies-list" style="display: none;">
+                                                {% for respuesta in comentario.respuestas.all %}
+                                                    <div class="comment-item p-2 mb-2 border-start border-primary border-3 bg-white">
+                                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                                            <div>
+                                                                <strong class="small">{{ respuesta.usuario.username }}</strong>
+                                                                <small class="text-muted ms-1" style="font-size: 0.75rem;">{{ respuesta.fecha|date:"d/m/Y H:i" }}</small>
+                                                            </div>
+                                                            <div class="btn-group btn-group-sm">
+                                                                {% if user == respuesta.usuario %}
+                                                                    <a href="{% url 'editar_comentario' respuesta.id %}" 
+                                                                       class="btn btn-sm btn-outline-warning" 
+                                                                       style="font-size: 0.7rem; padding: 0.15rem 0.3rem;"
+                                                                       title="Editar">
+                                                                        <i class="bi bi-pencil"></i>
+                                                                    </a>
+                                                                    <a href="{% url 'eliminar_comentario' respuesta.id %}" 
+                                                                       class="btn btn-sm btn-outline-danger" 
+                                                                       style="font-size: 0.7rem; padding: 0.15rem 0.3rem;"
+                                                                       title="Eliminar">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </a>
+                                                                {% endif %}
+                                                                {% if user.is_authenticated %}
+                                                                    <a href="{% url 'responder_comentario' comentario.id %}" 
+                                                                       class="btn btn-sm btn-outline-primary" 
+                                                                       style="font-size: 0.7rem; padding: 0.15rem 0.3rem;"
+                                                                       title="Responder">
+                                                                        <i class="bi bi-reply"></i>
+                                                                    </a>
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
-                                                        {% if user == respuesta.usuario %}
-                                                        <div class="btn-group btn-group-sm">
-                                                            <a href="{% url 'editar_comentario' respuesta.id %}" 
-                                                               class="btn btn-sm btn-outline-warning" 
-                                                               style="font-size: 0.7rem; padding: 0.15rem 0.3rem;"
-                                                               title="Editar">
-                                                                <i class="bi bi-pencil"></i>
-                                                            </a>
-                                                            <a href="{% url 'eliminar_comentario' respuesta.id %}" 
-                                                               class="btn btn-sm btn-outline-danger" 
-                                                               style="font-size: 0.7rem; padding: 0.15rem 0.3rem;"
-                                                               title="Eliminar">
-                                                                <i class="bi bi-trash"></i>
-                                                            </a>
-                                                        </div>
-                                                        {% endif %}
+                                                        <p class="mb-0 small">{{ respuesta.contenido }}</p>
                                                     </div>
-                                                    <p class="mb-0 small">{{ respuesta.contenido }}</p>
-                                                </div>
-                                            {% endfor %}
+                                                {% endfor %}
+                                            </div>
                                         </div>
                                     {% endif %}
                                 </div>
@@ -368,5 +382,107 @@
             }
         });
     });
+
+    // Toggle de respuestas - Mostrar/Ocultar respuestas anidadas
+    function toggleReplies(button) {
+        const repliesContainer = button.nextElementSibling;
+        const icon = button.querySelector('i');
+        
+        if (repliesContainer.style.display === 'none') {
+            repliesContainer.style.display = 'block';
+            icon.classList.remove('bi-chevron-down');
+            icon.classList.add('bi-chevron-up');
+            button.classList.add('active');
+        } else {
+            repliesContainer.style.display = 'none';
+            icon.classList.remove('bi-chevron-up');
+            icon.classList.add('bi-chevron-down');
+            button.classList.remove('active');
+        }
+    }
 </script>
+
+<style>
+/* Botón de toggle para respuestas */
+.btn-toggle-replies {
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    color: #667eea;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.btn-toggle-replies:hover {
+    background: rgba(102, 126, 234, 0.2);
+    border-color: #667eea;
+    transform: translateX(4px);
+}
+
+.btn-toggle-replies.active {
+    background: rgba(102, 126, 234, 0.25);
+    border-color: #667eea;
+}
+
+.btn-toggle-replies i {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+.replies-count {
+    font-size: 12px;
+}
+
+.replies-container {
+    margin-top: 8px;
+}
+
+.replies-list {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mejorar el scroll de la lista de comentarios */
+.comments-list {
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Scrollbar personalizado */
+.comments-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.comments-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 10px;
+}
+
+.comments-list::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-hover);
+}
+</style>
 {% endblock %}

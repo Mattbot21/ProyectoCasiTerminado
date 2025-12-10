@@ -1,0 +1,601 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ lista.nombre }} - Librería Digital{% endblock %}
+
+{% block content %}
+<section class="lista-detail-section">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb-modern" data-aos="fade-right">
+            <a href="{% url 'homeGeneral' %}" class="breadcrumb-item">
+                <i class="bi bi-house"></i> Inicio
+            </a>
+            <i class="bi bi-chevron-right breadcrumb-separator"></i>
+            <a href="{% url 'perfil' %}" class="breadcrumb-item">Mi Perfil</a>
+            <i class="bi bi-chevron-right breadcrumb-separator"></i>
+            <span class="breadcrumb-item active">{{ lista.nombre }}</span>
+        </nav>
+        
+        <!-- Header de la lista -->
+        <div class="lista-header" data-aos="fade-up">
+            <div class="lista-header-icon">
+                <i class="bi bi-collection"></i>
+            </div>
+            <div class="lista-header-content">
+                <h1 class="lista-title">{{ lista.nombre }}</h1>
+                <div class="lista-meta">
+                    <span class="meta-item">
+                        <i class="bi bi-person-circle"></i>
+                        Creada por <strong>{{ lista.usuario.username }}</strong>
+                    </span>
+                    <span class="meta-item">
+                        <i class="bi bi-book-fill"></i>
+                        <strong>{{ lista.libros.count }}</strong> libro{{ lista.libros.count|pluralize }}
+                    </span>
+                    <span class="meta-item">
+                        <i class="bi bi-calendar3"></i>
+                        {{ lista.fecha_creacion|date:"d M Y" }}
+                    </span>
+                </div>
+            </div>
+            {% if user == lista.usuario %}
+            <div class="lista-actions">
+                <a href="{% url 'editar_lista' lista.id %}" class="btn-modern btn-edit">
+                    <i class="bi bi-pencil"></i>
+                    Editar
+                </a>
+                <a href="{% url 'eliminar_lista' lista.id %}" class="btn-modern btn-delete">
+                    <i class="bi bi-trash"></i>
+                    Eliminar
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Descripción -->
+        {% if lista.descripcion %}
+        <div class="lista-description" data-aos="fade-up" data-aos-delay="100">
+            <div class="description-header">
+                <i class="bi bi-text-paragraph"></i>
+                <h5>Descripción</h5>
+            </div>
+            <p class="description-text">{{ lista.descripcion }}</p>
+        </div>
+        {% endif %}
+        
+        <!-- Libros -->
+        <div class="lista-books" data-aos="fade-up" data-aos-delay="200">
+            <div class="books-header">
+                <div class="books-header-left">
+                    <i class="bi bi-book"></i>
+                    <h5>Libros en esta lista</h5>
+                    <span class="books-badge">{{ lista.libros.count }}</span>
+                </div>
+            </div>
+            
+            {% if lista.libros.all %}
+            <div class="books-grid">
+                {% for libro in lista.libros.all %}
+                <div class="book-card-mini" data-aos="zoom-in" data-aos-delay="{{ forloop.counter0|add:50 }}">
+                    <div class="book-card-mini-cover">
+                        {% if libro.portada %}
+                        <img src="{{ libro.portada.url }}" alt="{{ libro.titulo }}">
+                        {% else %}
+                        <div class="book-card-mini-placeholder">
+                            <i class="bi bi-book"></i>
+                        </div>
+                        {% endif %}
+                        <div class="book-card-mini-overlay">
+                            <a href="{% url 'detalle_libro' libro.id %}" class="btn-overlay">
+                                <i class="bi bi-eye"></i>
+                                Ver detalles
+                            </a>
+                        </div>
+                    </div>
+                    <div class="book-card-mini-info">
+                        <h6 class="book-card-mini-title">{{ libro.titulo }}</h6>
+                        <p class="book-card-mini-author">{{ libro.autor }}</p>
+                        <span class="book-card-mini-genre">{{ libro.genero|title }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state-books">
+                <div class="empty-icon">
+                    <i class="bi bi-inbox"></i>
+                </div>
+                <h6>No hay libros en esta lista</h6>
+                <p>Comienza agregando libros desde la página de detalle de cada libro.</p>
+                <a href="{% url 'buscar_libros' %}" class="btn-modern btn-primary">
+                    <i class="bi bi-search"></i>
+                    Explorar libros
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Botón volver -->
+        <div class="lista-footer" data-aos="fade-up">
+            <a href="{% url 'perfil' %}" class="btn-modern btn-back">
+                <i class="bi bi-arrow-left"></i>
+                Volver al perfil
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+/* ============================================
+   DETALLE DE LISTA - DISEÑO PROFESIONAL
+   ============================================ */
+
+.lista-detail-section {
+    min-height: 100vh;
+    padding: 100px 0 60px;
+    background: var(--primary-dark);
+}
+
+/* Breadcrumb moderno */
+.breadcrumb-modern {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.breadcrumb-item {
+    color: var(--gray-400);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.breadcrumb-item:hover {
+    color: var(--white);
+}
+
+.breadcrumb-item.active {
+    color: var(--white);
+    font-weight: 600;
+}
+
+.breadcrumb-separator {
+    color: var(--gray-600);
+    font-size: 12px;
+}
+
+/* Header de la lista */
+.lista-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 32px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+.lista-header-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--gradient-accent);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 10px 30px rgba(233, 69, 96, 0.3);
+}
+
+.lista-header-icon i {
+    font-size: 40px;
+    color: white;
+}
+
+.lista-header-content {
+    flex: 1;
+}
+
+.lista-title {
+    font-family: var(--font-heading);
+    font-size: 32px;
+    color: var(--white);
+    margin-bottom: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.lista-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--gray-300);
+    font-size: 14px;
+}
+
+.meta-item i {
+    color: var(--accent);
+    font-size: 16px;
+}
+
+.meta-item strong {
+    color: var(--white);
+}
+
+.lista-actions {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+/* Descripción */
+.lista-description {
+    padding: 24px 28px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+.description-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.description-header i {
+    font-size: 24px;
+    color: var(--accent);
+}
+
+.description-header h5 {
+    color: var(--white);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.description-text {
+    color: var(--gray-300) !important;
+    font-size: 15px;
+    line-height: 1.8;
+    margin: 0;
+}
+
+/* Sección de libros */
+.lista-books {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+}
+
+.books-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.books-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.books-header i {
+    font-size: 24px;
+    color: var(--accent);
+}
+
+.books-header h5 {
+    color: var(--white);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.books-badge {
+    background: var(--gradient-accent);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Grid de libros */
+.books-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 24px;
+}
+
+.book-card-mini {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.book-card-mini:hover {
+    transform: translateY(-8px);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent);
+    box-shadow: 0 12px 30px rgba(233, 69, 96, 0.2);
+}
+
+.book-card-mini-cover {
+    position: relative;
+    width: 100%;
+    height: 260px;
+    overflow: hidden;
+}
+
+.book-card-mini-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.book-card-mini:hover .book-card-mini-cover img {
+    transform: scale(1.1);
+}
+
+.book-card-mini-placeholder {
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-500);
+    font-size: 48px;
+}
+
+.book-card-mini-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.book-card-mini:hover .book-card-mini-overlay {
+    opacity: 1;
+}
+
+.btn-overlay {
+    background: var(--gradient-accent);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.3s ease;
+}
+
+.btn-overlay:hover {
+    transform: scale(1.05);
+    color: white;
+}
+
+.book-card-mini-info {
+    padding: 16px;
+}
+
+.book-card-mini-title {
+    color: var(--white);
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.book-card-mini-author {
+    color: var(--gray-400) !important;
+    font-size: 13px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.book-card-mini-genre {
+    display: inline-block;
+    background: rgba(102, 126, 234, 0.15);
+    color: #667eea;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Estado vacío */
+.empty-state-books {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+}
+
+.empty-icon i {
+    font-size: 48px;
+    color: var(--gray-600);
+}
+
+.empty-state-books h6 {
+    color: var(--white);
+    font-size: 20px;
+    margin-bottom: 12px;
+}
+
+.empty-state-books p {
+    color: var(--gray-400) !important;
+    font-size: 15px;
+    margin-bottom: 24px;
+}
+
+/* Botones modernos */
+.btn-modern {
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-edit {
+    background: rgba(102, 126, 234, 0.15);
+    color: #667eea;
+    border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.btn-edit:hover {
+    background: rgba(102, 126, 234, 0.25);
+    color: #667eea;
+    transform: translateY(-2px);
+}
+
+.btn-delete {
+    background: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.btn-delete:hover {
+    background: rgba(220, 53, 69, 0.25);
+    color: #dc3545;
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: var(--gradient-accent);
+    color: white;
+    box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+    color: white;
+}
+
+.btn-back {
+    background: rgba(108, 117, 125, 0.15);
+    color: var(--gray-300);
+    border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+.btn-back:hover {
+    background: rgba(108, 117, 125, 0.25);
+    color: var(--white);
+    transform: translateY(-2px);
+}
+
+/* Footer */
+.lista-footer {
+    text-align: center;
+    padding: 20px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .lista-header {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .lista-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+    
+    .lista-actions .btn-modern {
+        flex: 1;
+    }
+    
+    .lista-title {
+        font-size: 24px;
+    }
+    
+    .books-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 16px;
+    }
+    
+    .book-card-mini-cover {
+        height: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .lista-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .books-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+{% endblock %}

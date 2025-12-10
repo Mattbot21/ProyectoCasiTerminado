@@ -1,0 +1,561 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notificaciones - Librería Digital{% endblock %}
+
+{% block content %}
+<section class="notifications-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Header -->
+                <div class="notifications-header" data-aos="fade-down">
+                    <div class="header-content">
+                        <div class="title-wrapper">
+                            <i class="bi bi-bell-fill"></i>
+                            <h2>Notificaciones</h2>
+                            {% if no_leidas > 0 %}
+                            <span class="badge-unread">{{ no_leidas }}</span>
+                            {% endif %}
+                        </div>
+                        {% if no_leidas > 0 %}
+                        <form method="POST" action="{% url 'marcar_todas_leidas' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-mark-all">
+                                <i class="bi bi-check2-all"></i>
+                                Marcar todas como leídas
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Lista de Notificaciones -->
+                {% if notificaciones %}
+                <div class="notifications-list">
+                    {% for notif in notificaciones %}
+                    <div class="notification-card {% if not notif.leida %}notification-unread{% endif %}" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:50 }}">
+                        <div class="notification-main">
+                            <!-- Icono según tipo -->
+                            <div class="notification-icon-wrapper">
+                                {% if notif.tipo == 'comentario' %}
+                                <div class="notification-icon icon-comment">
+                                    <i class="bi bi-chat-dots-fill"></i>
+                                </div>
+                                {% elif notif.tipo == 'valoracion' %}
+                                <div class="notification-icon icon-star">
+                                    <i class="bi bi-star-fill"></i>
+                                </div>
+                                {% elif notif.tipo == 'respuesta' %}
+                                <div class="notification-icon icon-reply">
+                                    <i class="bi bi-reply-fill"></i>
+                                </div>
+                                {% elif notif.tipo == 'seguidor' %}
+                                <div class="notification-icon icon-follow">
+                                    <i class="bi bi-person-plus-fill"></i>
+                                </div>
+                                {% else %}
+                                <div class="notification-icon icon-default">
+                                    <i class="bi bi-bell-fill"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Contenido -->
+                            <div class="notification-content">
+                                <p class="notification-message {% if not notif.leida %}message-unread{% endif %}">
+                                    {{ notif.mensaje }}
+                                </p>
+                                <div class="notification-meta">
+                                    <span class="notification-time">
+                                        <i class="bi bi-clock"></i>
+                                        {{ notif.fecha|timesince }} atrás
+                                    </span>
+                                    {% if notif.usuario_origen %}
+                                    <span class="notification-user">
+                                        <i class="bi bi-person"></i>
+                                        {{ notif.usuario_origen.username }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Link al contenido relacionado -->
+                                {% if notif.libro %}
+                                <div class="notification-action mt-2">
+                                    <a href="{% url 'detalle_libro' notif.libro.id %}" class="btn-view-book">
+                                        <i class="bi bi-eye"></i> Ver libro
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Acciones -->
+                            <div class="notification-actions">
+                                {% if not notif.leida %}
+                                <a href="{% url 'marcar_notificacion_leida' notif.id %}" 
+                                   class="btn-action btn-mark-read" 
+                                   title="Marcar como leída">
+                                    <i class="bi bi-check"></i>
+                                </a>
+                                {% endif %}
+                                <form method="POST" action="{% url 'eliminar_notificacion' notif.id %}" class="d-inline" onsubmit="return confirm('¿Eliminar esta notificación?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-action btn-delete" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Paginación -->
+                {% if notificaciones.has_other_pages %}
+                <div class="pagination-wrapper" data-aos="fade-up">
+                    <nav aria-label="Paginación de notificaciones">
+                        <ul class="pagination pagination-custom">
+                            {% if notificaciones.has_previous %}
+                            <li class="page-item-custom">
+                                <a class="page-link-custom page-nav" href="?page=1">
+                                    <i class="bi bi-chevron-bar-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item-custom">
+                                <a class="page-link-custom page-nav" href="?page={{ notificaciones.previous_page_number }}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <li class="page-item-custom active">
+                                <span class="page-link-custom page-number">
+                                    {{ notificaciones.number }} / {{ notificaciones.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if notificaciones.has_next %}
+                            <li class="page-item-custom">
+                                <a class="page-link-custom page-nav" href="?page={{ notificaciones.next_page_number }}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item-custom">
+                                <a class="page-link-custom page-nav" href="?page={{ notificaciones.paginator.num_pages }}">
+                                    <i class="bi bi-chevron-bar-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+
+                {% else %}
+                <!-- Estado vacío -->
+                <div class="empty-state" data-aos="fade-up">
+                    <div class="empty-icon">
+                        <i class="bi bi-bell-slash"></i>
+                    </div>
+                    <h4>No tienes notificaciones</h4>
+                    <p>Cuando alguien interactúe con tus reseñas, aparecerán aquí.</p>
+                    <a href="{% url 'homeGeneral' %}" class="btn-back-home">
+                        <i class="bi bi-house"></i> Volver al inicio
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* ============================================
+   NOTIFICACIONES - DISEÑO PROFESIONAL
+   ============================================ */
+
+.notifications-section {
+    min-height: 100vh;
+    padding: 100px 0 60px;
+    background: var(--primary-dark);
+}
+
+/* Header */
+.notifications-header {
+    margin-bottom: 40px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 24px 28px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+}
+
+.title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.title-wrapper i {
+    font-size: 32px;
+    color: var(--accent);
+}
+
+.title-wrapper h2 {
+    color: var(--white);
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.badge-unread {
+    background: var(--gradient-accent);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(233, 69, 96, 0.4);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.btn-mark-all {
+    background: rgba(102, 126, 234, 0.15);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    color: #667eea;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-mark-all:hover {
+    background: rgba(102, 126, 234, 0.25);
+    border-color: #667eea;
+    transform: translateY(-2px);
+}
+
+.btn-mark-all i {
+    font-size: 16px;
+}
+
+/* Lista de Notificaciones */
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Tarjeta de Notificación */
+.notification-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.notification-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.notification-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(8px);
+}
+
+.notification-unread {
+    background: rgba(233, 69, 96, 0.08) !important;
+    border-color: rgba(233, 69, 96, 0.3) !important;
+}
+
+.notification-unread::before {
+    background: var(--gradient-accent) !important;
+}
+
+.notification-unread:hover {
+    background: rgba(233, 69, 96, 0.12) !important;
+}
+
+.notification-main {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+/* Iconos */
+.notification-icon-wrapper {
+    flex-shrink: 0;
+}
+
+.notification-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.icon-comment {
+    background: rgba(0, 123, 255, 0.15);
+    color: #007bff;
+    border: 2px solid rgba(0, 123, 255, 0.3);
+}
+
+.icon-star {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+    border: 2px solid rgba(255, 193, 7, 0.3);
+}
+
+.icon-reply {
+    background: rgba(23, 162, 184, 0.15);
+    color: #17a2b8;
+    border: 2px solid rgba(23, 162, 184, 0.3);
+}
+
+.icon-follow {
+    background: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+    border: 2px solid rgba(40, 167, 69, 0.3);
+}
+
+.icon-default {
+    background: rgba(108, 117, 125, 0.15);
+    color: var(--gray-400);
+    border: 2px solid rgba(108, 117, 125, 0.3);
+}
+
+/* Contenido */
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-message {
+    color: var(--gray-300);
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0 0 8px 0;
+    word-wrap: break-word;
+}
+
+.message-unread {
+    color: var(--white) !important;
+    font-weight: 600;
+}
+
+.notification-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.notification-time,
+.notification-user {
+    color: var(--gray-400);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.notification-time i,
+.notification-user i {
+    font-size: 12px;
+}
+
+.btn-view-book {
+    background: rgba(102, 126, 234, 0.15);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    color: #667eea;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-view-book:hover {
+    background: rgba(102, 126, 234, 0.25);
+    border-color: #667eea;
+    color: #667eea;
+    transform: translateY(-2px);
+}
+
+/* Acciones */
+.notification-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn-action {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: transparent;
+}
+
+.btn-mark-read {
+    background: rgba(40, 167, 69, 0.15);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    color: #28a745;
+}
+
+.btn-mark-read:hover {
+    background: rgba(40, 167, 69, 0.25);
+    border-color: #28a745;
+    transform: scale(1.1);
+}
+
+.btn-delete {
+    background: rgba(220, 53, 69, 0.15);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    color: #dc3545;
+}
+
+.btn-delete:hover {
+    background: rgba(220, 53, 69, 0.25);
+    border-color: #dc3545;
+    transform: scale(1.1);
+}
+
+/* Estado vacío */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.empty-icon {
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+}
+
+.empty-icon i {
+    font-size: 60px;
+    color: var(--gray-500);
+}
+
+.empty-state h4 {
+    color: var(--white);
+    font-size: 24px;
+    margin-bottom: 12px;
+}
+
+.empty-state p {
+    color: var(--gray-400);
+    font-size: 16px;
+    margin-bottom: 24px;
+}
+
+.btn-back-home {
+    background: var(--gradient-accent);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-back-home:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .notifications-section {
+        padding: 80px 0 40px;
+    }
+
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 20px;
+    }
+
+    .btn-mark-all {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .notification-main {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .notification-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .notification-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .title-wrapper h2 {
+        font-size: 22px;
+    }
+
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+}
+</style>
+{% endblock %}

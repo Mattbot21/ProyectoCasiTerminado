@@ -5,6 +5,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.views.decorators.cache import never_cache
 from collections import Counter
 
 from .forms import ListaForm, ReseñaForm, LibroForm, CategoriaForm, ComentarioForm
@@ -29,7 +30,7 @@ def crear_libro(request):
     else:
         form = LibroForm()
 
-    return render(request, "biblioteca/crear_libro.html", {"form": form})
+    return render(request, "biblioteca/libros/crear_libro.html", {"form": form})
 
 
 # -------------------------------
@@ -49,7 +50,7 @@ def editar_libro(request, libro_id):
             return redirect('lista_libros')
     else:
         form = LibroForm(instance=libro)
-    return render(request, 'biblioteca/editar_libro.html', {'form': form, 'libro': libro})
+    return render(request, 'biblioteca/libros/editar_libro.html', {'form': form, 'libro': libro})
 
 
 # -------------------------------
@@ -66,7 +67,7 @@ def eliminar_libro(request, libro_id):
         messages.success(request, "Libro eliminado correctamente.")
         return redirect('lista_libros')
 
-    return render(request, 'biblioteca/eliminar_libro.html', {'libro': libro})
+    return render(request, 'biblioteca/libros/eliminar_libro.html', {'libro': libro})
 
 
 # -------------------------------
@@ -152,7 +153,7 @@ def buscar_libros(request):
     # Obtener géneros disponibles para el filtro
     generos_disponibles = Libro.objects.values_list('genero', flat=True).distinct().order_by('genero')
 
-    return render(request, 'biblioteca/buscar_libros.html', {
+    return render(request, 'biblioteca/libros/buscar_libros.html', {
         'resultados': page_obj,
         'page_obj': page_obj,
         'query': query,
@@ -171,7 +172,7 @@ def lista_libros(request):
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'biblioteca/lista_libros.html', {
+    return render(request, 'biblioteca/libros/lista_libros.html', {
         'libros': page_obj,
         'page_obj': page_obj
     })
@@ -192,13 +193,13 @@ def crear_lista(request):
             return redirect('perfil')
     else:
         form = ListaForm()
-    return render(request, 'biblioteca/crear_lista.html', {'form': form})
+    return render(request, 'biblioteca/listas/crear_lista.html', {'form': form})
 
 
 @login_required
 def detalle_lista(request, lista_id):
     lista = get_object_or_404(Lista, id=lista_id, usuario=request.user)
-    return render(request, 'biblioteca/detalle_lista.html', {'lista': lista})
+    return render(request, 'biblioteca/listas/detalle_lista.html', {'lista': lista})
 
 
 @login_required
@@ -212,7 +213,7 @@ def editar_lista(request, lista_id):
             return redirect('perfil')
     else:
         form = ListaForm(instance=lista)
-    return render(request, 'biblioteca/editar_lista.html', {'form': form, 'lista': lista})
+    return render(request, 'biblioteca/listas/editar_lista.html', {'form': form, 'lista': lista})
 
 
 @login_required
@@ -222,7 +223,7 @@ def eliminar_lista(request, lista_id):
         lista.delete()
         messages.success(request, "La lista se eliminó correctamente.")
         return redirect('perfil')
-    return render(request, 'biblioteca/eliminar_lista.html', {'lista': lista})
+    return render(request, 'biblioteca/listas/eliminar_lista.html', {'lista': lista})
 
 
 # -------------------------------
@@ -241,7 +242,7 @@ def detalle_libro(request, libro_id):
     if request.user.is_authenticated:
         es_favorito = Favorito.objects.filter(usuario=request.user, libro=libro).exists()
 
-    return render(request, 'biblioteca/detalle_libro.html', {
+    return render(request, 'biblioteca/libros/detalle_libro.html', {
         'libro': libro,
         'reseñas': reseñas,
         'es_favorito': es_favorito
@@ -272,15 +273,25 @@ def crear_reseña(request, libro_id):
 @login_required
 def editar_reseña(request, reseña_id):
     reseña = get_object_or_404(Reseña, id=reseña_id, usuario=request.user)
+    libro = reseña.libro
+    
     if request.method == 'POST':
         form = ReseñaForm(request.POST, instance=reseña)
         if form.is_valid():
-            form.save()
-            messages.success(request, "La reseña se actualizó correctamente.")
+            reseña_actualizada = form.save(commit=False)
+            reseña_actualizada.save()
+            
+            # Forzar recalculación del promedio del libro
+            nuevo_promedio = libro.promedio_calificacion()
+            
+            messages.success(
+                request, 
+                f"La reseña se actualizó correctamente. Nueva calificación: {reseña_actualizada.calificacion} estrellas."
+            )
             return redirect('perfil')
     else:
         form = ReseñaForm(instance=reseña)
-    return render(request, 'biblioteca/editar_reseña.html', {'form': form, 'reseña': reseña})
+    return render(request, 'biblioteca/reseñas/editar_reseña.html', {'form': form, 'reseña': reseña})
 
 
 @login_required
@@ -290,7 +301,7 @@ def eliminar_reseña(request, reseña_id):
         reseña.delete()
         messages.success(request, "La reseña se eliminó correctamente.")
         return redirect('perfil')
-    return render(request, 'biblioteca/eliminar_reseña.html', {'reseña': reseña})
+    return render(request, 'biblioteca/reseñas/eliminar_reseña.html', {'reseña': reseña})
 
 
 # -------------------------------
@@ -310,7 +321,7 @@ def quitar_favorito(request, libro_id):
         favorito.delete()
         messages.success(request, "El libro se quitó de tus favoritos.")
         return redirect('perfil')
-    return render(request, 'biblioteca/quitar_favorito.html', {'favorito': favorito})
+    return render(request, 'biblioteca/usuario/quitar_favorito.html', {'favorito': favorito})
 
 
 # -------------------------------
@@ -319,7 +330,7 @@ def quitar_favorito(request, libro_id):
 @login_required
 def ver_historial(request):
     historial = Historial.objects.filter(usuario=request.user).order_by('-fecha')
-    return render(request, 'biblioteca/historial.html', {'historial': historial})
+    return render(request, 'biblioteca/usuario/historial.html', {'historial': historial})
 
 
 # -------------------------------
@@ -346,11 +357,14 @@ def crear_categoria(request):
 # Perfil de usuario
 # -------------------------------
 @login_required
+@login_required
+@never_cache
 def perfil(request):
-    reseñas = Reseña.objects.filter(usuario=request.user).order_by('-fecha')
-    favoritos = Favorito.objects.filter(usuario=request.user)
-    listas = Lista.objects.filter(usuario=request.user)
-    historial = Historial.objects.filter(usuario=request.user).order_by('-fecha')
+    # Forzar consultas frescas de la base de datos
+    reseñas = Reseña.objects.filter(usuario=request.user).select_related('libro').order_by('-fecha')
+    favoritos = Favorito.objects.filter(usuario=request.user).select_related('libro')
+    listas = Lista.objects.filter(usuario=request.user).prefetch_related('libros')
+    historial = Historial.objects.filter(usuario=request.user).select_related('libro').order_by('-fecha')
 
     return render(request, 'usuarios/perfil.html', {
         'reseñas': reseñas,
@@ -393,7 +407,7 @@ def crear_comentario(request, reseña_id):
     else:
         form = ComentarioForm()
     
-    return render(request, 'biblioteca/crear_comentario.html', {
+    return render(request, 'biblioteca/comentarios/crear_comentario.html', {
         'form': form,
         'reseña': reseña
     })
@@ -413,7 +427,7 @@ def editar_comentario(request, comentario_id):
     else:
         form = ComentarioForm(instance=comentario)
     
-    return render(request, 'biblioteca/editar_comentario.html', {
+    return render(request, 'biblioteca/comentarios/editar_comentario.html', {
         'form': form,
         'comentario': comentario
     })
@@ -430,7 +444,7 @@ def eliminar_comentario(request, comentario_id):
         messages.success(request, "Comentario eliminado correctamente.")
         return redirect('detalle_libro', libro_id=libro_id)
     
-    return render(request, 'biblioteca/eliminar_comentario.html', {
+    return render(request, 'biblioteca/comentarios/eliminar_comentario.html', {
         'comentario': comentario
     })
 
@@ -489,7 +503,7 @@ def valorar_reseña(request, reseña_id):
         reseña=reseña
     ).first()
     
-    return render(request, 'biblioteca/valorar_reseña.html', {
+    return render(request, 'biblioteca/reseñas/valorar_reseña.html', {
         'reseña': reseña,
         'valoracion_actual': valoracion_actual
     })
@@ -512,7 +526,7 @@ def ver_notificaciones(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'biblioteca/notificaciones.html', {
+    return render(request, 'biblioteca/usuario/notificaciones.html', {
         'notificaciones': page_obj,
         'no_leidas': no_leidas
     })
@@ -592,7 +606,7 @@ def responder_comentario(request, comentario_id):
     else:
         form = ComentarioForm()
     
-    return render(request, 'biblioteca/responder_comentario.html', {
+    return render(request, 'biblioteca/comentarios/responder_comentario.html', {
         'form': form,
         'comentario_padre': comentario_padre
     })
@@ -650,14 +664,14 @@ def dejar_seguir_usuario(request, usuario_id):
 def lista_siguiendo(request):
     """Lista de usuarios que sigue"""
     siguiendo = Seguimiento.objects.filter(seguidor=request.user).select_related('seguido')
-    return render(request, 'biblioteca/lista_siguiendo.html', {'siguiendo': siguiendo})
+    return render(request, 'biblioteca/usuario/lista_siguiendo.html', {'siguiendo': siguiendo})
 
 
 @login_required
 def lista_seguidores(request):
     """Lista de seguidores"""
     seguidores = Seguimiento.objects.filter(seguido=request.user).select_related('seguidor')
-    return render(request, 'biblioteca/lista_seguidores.html', {'seguidores': seguidores})
+    return render(request, 'biblioteca/usuario/lista_seguidores.html', {'seguidores': seguidores})
 
 
 @login_required
@@ -689,7 +703,7 @@ def perfil_usuario_publico(request, usuario_id):
     usuario_perfil = get_object_or_404(Usuario, id=usuario_id)
     esta_siguiendo = Seguimiento.esta_siguiendo(request.user, usuario_perfil) if request.user.is_authenticated else False
     
-    return render(request, 'biblioteca/perfil_publico.html', {
+    return render(request, 'biblioteca/usuario/perfil_publico.html', {
         'usuario_perfil': usuario_perfil,
         'esta_siguiendo': esta_siguiendo,
         'total_seguidores': usuario_perfil.seguidores.count(),
